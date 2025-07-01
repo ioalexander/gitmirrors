@@ -1,0 +1,8 @@
+[global]
+address = "0.0.0.0"
+
+[development]
+address = "localhost"
+
+[production]
+address = "0.0.0.0"

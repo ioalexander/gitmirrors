@@ -1,0 +1,98 @@
+:root {
+  --white: #fefefe;
+  --black: #101010;
+  --true-black: #000;
+
+  --red: #d80303;
+
+  --gray-900: #575757;
+
+  --gray-800: #767676;
+
+  --gray-600: #a1a1a1;
+
+  --gray-400: #cfcfcf;
+
+  --gray-200: #eeeeee;
+
+  --gray-100: #fafafa;
+
+  --accent-color-blue: #10a5ff;
+  --accent-color-blue-gradient: linear-gradient(
+    45deg,
+    rgba(120, 176, 255, 1) 0%,
+    rgba(0, 95, 255, 1) 99%
+  );
+
+  --accent-color-blue-gradient-darker: linear-gradient(
+    45deg,
+    #3186ffff 0%,
+    #0566ffff 99%
+  );
+
+  --accent-color-blue-gradient-lighter: linear-gradient(
+    45deg,
+    #dfecffff 0%,
+    #c2daffff 99%
+  );
+
+  --status-color-error: #f74720;
+
+  --shadow: drop-shadow(0 0 3px #00000044);
+  --shadow-light: drop-shadow(0 0 3px #00000022);
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  color: var(--black);
+
+  font-family: "Poppins", sans-serif;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+body {
+  background: var(--white);
+}
+
+button {
+  position: relative;
+  border: none;
+  background: var(--accent-color-blue);
+  color: var(--white);
+  padding: 12px 32px;
+  margin: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  outline: none;
+}
+button > div {
+  color: var(--white);
+}
+
+button:hover {
+  filter: brightness(105%);
+}
+
+button:focused {
+  filter: brightness(95%);
+}
+
+input {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+
+a {
+  color: var(--accent-color-blue);
+}
+
+strong {
+  font-weight: 800;
+  color: var(--true-black);
+}

@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    networks:
+      - gitmirrors
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      ROCKET_ENV: ${ROCKET_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+
+  web-client:
+    build:
+      context: ./web-client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - gitmirrors
+    environment:
+      NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL}
+networks:
+  gitmirrors:
+    driver: bridge

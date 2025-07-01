@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./server:/usr/src/app
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    networks:
+      - gitmirrors
+    environment:
+      SERVER_PORT: ${SERVER_PORT}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      ROCKET_ENV: ${ROCKET_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+  web-client:
+    build:
+      context: ./web-client
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./web-client:/usr/src/app
+    ports:
+      - "${WEB_CLIENT_PORT}:${WEB_CLIENT_PORT}"
+    networks:
+      - gitmirrors
+    environment:
+      NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL}
+  db:
+    image: postgres:14.4
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    networks:
+      - gitmirrors
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST_AUTH_METHOD=${POSTGRES_HOST_AUTH_METHOD}
+networks:
+  gitmirrors:
+    driver: bridge
