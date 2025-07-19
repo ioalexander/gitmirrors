@@ -1,6 +1,8 @@
 mod routes;
 use dotenv::dotenv;
 mod db;
+mod models;
+mod schema;
 
 #[macro_use]
 extern crate rocket;

@@ -1,9 +1,9 @@
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 
-pub type DbConn = r2d2::Pool<ConnectionManager<PgConnection>>;
+pub type DbConnection = r2d2::Pool<ConnectionManager<PgConnection>>;
 
-pub fn init_pool(database_url: &str) -> DbConn {
+pub fn init_pool(database_url: &str) -> DbConnection {
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     r2d2::Pool::builder()
         .build(manager)

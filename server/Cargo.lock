@@ -169,7 +169,10 @@ checksum = "c469d952047f47f91b68d1cba3f10d63c11d73e4636f24f08daf0278abf01c4d"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
+ "serde",
+ "wasm-bindgen",
  "windows-link",
 ]
 
@@ -280,6 +283,7 @@ dependencies = [
  "itoa",
  "pq-sys",
  "r2d2",
+ "uuid",
 ]
 
 [[package]]
@@ -1258,10 +1262,12 @@ dependencies = [
 name = "server"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "diesel",
  "dotenv",
  "rocket",
  "serde",
+ "uuid",
 ]
 
 [[package]]
@@ -1600,6 +1606,18 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+
+[[package]]
+name = "uuid"
+version = "1.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3cf4199d1e5d15ddd86a694e4d0dffa9c323ce759fea589f00fef9d81cc1931d"
+dependencies = [
+ "getrandom 0.3.3",
+ "js-sys",
+ "serde",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "valuable"
