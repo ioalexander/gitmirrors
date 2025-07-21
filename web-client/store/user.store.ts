@@ -10,7 +10,7 @@ interface State {
   };
 }
 
-export const useAuthStore = defineStore("auth", {
+export const useUserStore = defineStore("user", {
   state: (): State => ({
     user: undefined,
     session: undefined,
@@ -27,7 +27,7 @@ export const useAuthStore = defineStore("auth", {
       const api = useApi();
 
       try {
-        await api.auth.logout();
+        await api.user.logout();
       } catch (e: any) {
         console.error("Failed to perform logout. Error: ", e);
         this.UNSET_USER();
@@ -37,7 +37,7 @@ export const useAuthStore = defineStore("auth", {
     },
     async getMe(api: Api, nuxtServerInitOptions?: NuxtServerInitOptions) {
       try {
-        const meResponse = await api.auth.getMe();
+        const meResponse = await api.user.getMe();
 
         if (meResponse?.message === "Unauthorized") {
           throw new Error("User not authorized. Bad token");

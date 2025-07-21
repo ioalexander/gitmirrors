@@ -2,12 +2,12 @@ import axios from "axios";
 import type { NuxtServerInitOptions } from "~/plugins/init.server";
 import type { IApiResponse } from "~/types/api";
 
-export const authApi = (
+export const userApi = (
   config: { baseUrl: string },
   nuxtServerInitOptions?: NuxtServerInitOptions,
 ) => {
   const axiosBase = axios.create({
-    baseURL: config.baseUrl + "/auth",
+    baseURL: config.baseUrl + "/user",
     withCredentials: true,
     validateStatus: (status) => status >= 200 && status < 399,
   });

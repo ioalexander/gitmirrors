@@ -31,10 +31,10 @@
 </template>
 
 <script lang="js" setup>
-import { useAuthStore } from "~/store/auth.store";
+import { useUserStore } from "~/store/user.store";
 
 const api = useApi();
-const authStore = useAuthStore();
+const userStore = useUserStore();
 const router = useRouter();
 
 const state = reactive({
@@ -85,21 +85,26 @@ const onSubmit = async () => {
   try {
     await sleep(1000);
 
-    await api.auth.login({
-      username: state.form.email,
+    const response = await api.user.login({
+      username: state.form.username,
       password: state.form.password,
     });
 
-    authStore.SET_AUTH_STATE({
+    if (response.success !== true) {
+      throw new Error("Malformed Response");
+    }
+
+    userStore.SET_AUTH_STATE({
       screen: "welcome",
       username: state.form.username,
     });
 
     window.location.href = "/dashboard";
   } catch (e) {
+    console.log("Error happened", e);
     state.errors.submit = `Error: ${e?.message}`;
 
-    if (e?.status === 400 || e?.status === 401) {
+    if (e?.status === 400 || e?.status === 401 || e?.status === 404) {
       state.errors.submit = `Username or password is invalid`;
     } else {
       if (e?.status < 500) {

@@ -25,6 +25,8 @@ services:
       - gitmirrors
     environment:
       NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL}
+      NUXT_PUBLIC_SERVER_API_URL: ${NUXT_PUBLIC_SERVER_API_URL}
+
 networks:
   gitmirrors:
     driver: bridge

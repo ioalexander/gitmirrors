@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { type NuxtServerInitOptions } from "~/plugins/init.server";
-import { useAuthStore } from "~/store/auth.store";
+import { useUserStore } from "~/store/user.store";
 import { createApiClient } from "~/factories/api.factory";
 import axios from "axios";
 
@@ -17,8 +17,14 @@ export const useStore = defineStore("root", {
       );
 
       try {
-        const healthUrl = config.public.apiBase + "/health";
-        console.error(healthUrl);
+        const nuxtApp = useNuxtApp();
+        const isServer = !!nuxtApp.ssrContext;
+
+        const baseUrl = isServer
+          ? config.public.serverApiBase
+          : config.public.apiBase;
+
+        const healthUrl = baseUrl + "/health";
         await axios.get(healthUrl);
       } catch (e) {
         console.error("Server unavailable");
@@ -29,8 +35,8 @@ export const useStore = defineStore("root", {
         });
       }
 
-      const authStore = useAuthStore();
-      await authStore.getMe(api);
+      const userStore = useUserStore();
+      await userStore.getMe(api);
     },
   },
 });

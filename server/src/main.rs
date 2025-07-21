@@ -1,8 +1,12 @@
 mod routes;
 use dotenv::dotenv;
+
+use crate::utils::catchers::{internal_error, not_found};
 mod db;
+mod middlewares;
 mod models;
 mod schema;
+mod utils;
 
 #[macro_use]
 extern crate rocket;
@@ -31,4 +35,5 @@ fn rocket() -> _ {
         )
         .mount("/api/", routes![health])
         .mount("/api/", routes::routes())
+        .register("/", catchers![not_found, internal_error])
 }

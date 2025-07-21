@@ -1,4 +1,4 @@
-import { authApi } from "~/api/auth.api";
+import { userApi } from "~/api/user.api";
 import type { NuxtServerInitOptions } from "~/plugins/init.server";
 
 export function createApiClient(
@@ -6,7 +6,7 @@ export function createApiClient(
   options?: NuxtServerInitOptions,
 ) {
   return {
-    auth: authApi({ ...config }, options),
+    user: userApi({ ...config }, options),
   };
 }
 

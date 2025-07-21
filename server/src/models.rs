@@ -14,3 +14,22 @@ pub struct UserModel {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
+
+#[derive(Serialize)]
+pub struct PublicUser {
+    pub id: Uuid,
+    pub username: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl From<UserModel> for PublicUser {
+    fn from(user: UserModel) -> Self {
+        PublicUser {
+            id: user.id,
+            username: user.username,
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+        }
+    }
+}

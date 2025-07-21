@@ -5,13 +5,13 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore } from "~/store/auth.store";
+import { useUserStore } from "~/store/user.store";
 
 definePageMeta({
   layout: "auth",
 });
 
-const authStore = useAuthStore();
+const authStore = useUserStore();
 const router = useRouter();
 
 const screen = computed(() => authStore.authState.screen);
