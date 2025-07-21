@@ -3,7 +3,6 @@ import type { NuxtServerInitOptions } from "~/plugins/init.server";
 
 interface State {
   user?: { id: string; createdAt: Date; updatedAt: Date };
-  session?: { id: string; createdAt: Date; updatedAt: Date };
   authState: {
     screen: string;
     email: string;
@@ -13,14 +12,13 @@ interface State {
 export const useUserStore = defineStore("user", {
   state: (): State => ({
     user: undefined,
-    session: undefined,
     authState: {
       screen: "welcome",
       email: "",
     },
   }),
   getters: {
-    isAuthenticated: (state) => !!state.user && !!state.session,
+    isAuthenticated: (state) => !!state.user,
   },
   actions: {
     async logout() {
@@ -37,7 +35,9 @@ export const useUserStore = defineStore("user", {
     },
     async getMe(api: Api, nuxtServerInitOptions?: NuxtServerInitOptions) {
       try {
-        const meResponse = await api.user.getMe();
+        console.log("getting user...");
+        const meResponse = await api.user.getMe(nuxtServerInitOptions);
+        console.log("got user: ", meResponse);
 
         if (meResponse?.message === "Unauthorized") {
           throw new Error("User not authorized. Bad token");
@@ -50,25 +50,16 @@ export const useUserStore = defineStore("user", {
           throw new Error("meResponse.data.user is undefined");
         }
 
-        if (!session) {
-          throw new Error("meResponse.data.session is undefined");
-        }
-
         this.SET_USER({
           id: user.id,
           updatedAt: new Date(user.updatedAt),
           createdAt: new Date(user.createdAt),
         });
-        this.SET_SESSION({
-          id: session.id,
-          updatedAt: new Date(session.updatedAt),
-          createdAt: new Date(session.createdAt),
-        });
 
-        return { user, session };
+        return { user };
       } catch (e: any) {
+        console.log("get user error: ", e);
         this.UNSET_USER();
-        this.UNSET_SESSION();
       }
     },
     SET_USER(user: { id: string; createdAt: Date; updatedAt: Date }) {
@@ -76,12 +67,6 @@ export const useUserStore = defineStore("user", {
     },
     UNSET_USER() {
       this.user = undefined;
-    },
-    SET_SESSION(session: { id: string; createdAt: Date; updatedAt: Date }) {
-      this.session = { ...session };
-    },
-    UNSET_SESSION() {
-      this.session = undefined;
     },
     SET_AUTH_STATE(state: { screen: string; email: string }) {
       this.authState = { ...state };

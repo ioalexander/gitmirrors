@@ -26,12 +26,13 @@ export const userApi = (
     async logout() {
       await axiosBase.post("/logout");
     },
-    async getMe(): Promise<
+    async getMe(nuxtServerInitOptions?: NuxtServerInitOptions): Promise<
       IApiResponse<{
         user: { id: string; createdAt: string; updatedAt: string };
         session: { id: string; createdAt: string; updatedAt: string };
       }>
     > {
+      console.log("cookies:", nuxtServerInitOptions?.serverSideCookiesRaw);
       const { data: payload } = await axiosBase.get("/me", {
         headers: {
           Cookie: nuxtServerInitOptions?.serverSideCookiesRaw,

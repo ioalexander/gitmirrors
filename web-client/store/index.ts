@@ -7,9 +7,12 @@ import axios from "axios";
 export const useStore = defineStore("root", {
   actions: {
     async nuxtServerInit(nuxtApp: any, options: NuxtServerInitOptions) {
+      const isServer = !!nuxtApp.ssrContext;
+
+      console.log("nuxtServerInit hit...");
       const config = useRuntimeConfig();
       const api = createApiClient(
-        { baseUrl: config.public.apiBase },
+        { baseUrl: config.public.serverApiBase },
         {
           serverSideCookiesRaw:
             nuxtApp.ssrContext?.event.req.headers.cookie || "",
@@ -17,9 +20,6 @@ export const useStore = defineStore("root", {
       );
 
       try {
-        const nuxtApp = useNuxtApp();
-        const isServer = !!nuxtApp.ssrContext;
-
         const baseUrl = isServer
           ? config.public.serverApiBase
           : config.public.apiBase;
@@ -35,8 +35,14 @@ export const useStore = defineStore("root", {
         });
       }
 
+      console.log("server health ok");
+
+      console.log("initializing user store...");
       const userStore = useUserStore();
-      await userStore.getMe(api);
+      await userStore.getMe(api, options);
+      console.log("user: ", userStore.user);
+
+      console.log("all stores initialized!");
     },
   },
 });

@@ -5,6 +5,15 @@ export interface NuxtServerInitOptions {
 }
 
 export default defineNuxtPlugin(async (nuxtApp) => {
+  console.log("init.server.ts hit...");
+
+  const isServer = !!nuxtApp.ssrContext;
+
+  if (!isServer) {
+    console.log("Not a server. Initializing root store canceled.");
+    return;
+  }
+
   const store = useStore();
 
   const event = nuxtApp.ssrContext!.event;

@@ -1,7 +1,7 @@
 mod routes;
 use dotenv::dotenv;
 
-use crate::utils::catchers::{internal_error, not_found};
+use crate::utils::catchers::{internal_error, not_found, unauthorized};
 mod db;
 mod middlewares;
 mod models;
@@ -35,5 +35,5 @@ fn rocket() -> _ {
         )
         .mount("/api/", routes![health])
         .mount("/api/", routes::routes())
-        .register("/", catchers![not_found, internal_error])
+        .register("/", catchers![not_found, internal_error, unauthorized])
 }
