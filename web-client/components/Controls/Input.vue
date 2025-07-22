@@ -122,7 +122,7 @@ defineExpose({ setValue });
     width: 100%;
     height: 48px;
     border-radius: 8px;
-    background: var(--gray-200);
+    background: var(--black-100);
 
     .htmlInput {
       width: 100%;

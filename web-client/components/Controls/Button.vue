@@ -5,11 +5,17 @@
         [$style.isWhite]: props.isWhite,
         [$style.isRed]: props.isRed,
         [$style.fw]: props.fw,
+        [$style.isGray]: props.isGray,
       },
     ]"
     @click="emit('click')"
   >
-    <SvgBouncingCircles v-if="props.isLoading" :class="$style.svgIcon" />
+    <Icon
+      v-if="props.isLoading"
+      :class="$style.svgIcon"
+      name="line-md:loading-loop"
+    />
+
     <div
       :class="$style.content"
       :style="{
@@ -30,6 +36,10 @@ const props = defineProps({
     default: false,
   },
   isLoading: {
+    type: Boolean,
+    default: false,
+  },
+  isGray: {
     type: Boolean,
     default: false,
   },
@@ -57,6 +67,15 @@ const props = defineProps({
 
 .isRed {
   background: var(--red);
+  color: var(--white);
+
+  .content {
+    color: var(--white);
+  }
+}
+
+.isGray {
+  background: var(--black-100);
   color: var(--white);
 
   .content {

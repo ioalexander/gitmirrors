@@ -6,23 +6,32 @@ use rocket::serde::json::Json;
 use rocket::{State, http::CookieJar};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::db::DbConnection;
 use crate::middlewares::auth::AuthGuard;
 use crate::models::{PublicUser, UserModel};
 use crate::schema::user;
-use crate::utils::crypto::generate_random_string;
+use crate::utils::crypto::{generate_random_string, hash_password};
 use crate::utils::response::ApiResponse;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Validate)]
 pub struct UserLoginForm<'r> {
+    #[validate(length(min = 3, max = 32))]
     username: &'r str,
+    #[validate(length(min = 8, max = 50))]
     password: &'r str,
 }
 
 #[derive(Serialize)]
 pub struct UserLoginResponse {
     pub user: PublicUser,
+}
+
+#[derive(Deserialize, Validate)]
+pub struct UserChangePasswordForm<'r> {
+    #[validate(length(min = 8, max = 50))]
+    password: &'r str,
 }
 
 #[derive(Serialize)]
@@ -41,6 +50,10 @@ pub fn login(
     cookie_jar: &CookieJar,
     form: Json<UserLoginForm<'_>>,
 ) -> Custom<Json<ApiResponse<UserLoginResponse>>> {
+    if let Err(_e) = form.validate() {
+        return Custom(Status::BadRequest, Json(ApiResponse::error("Bad request")));
+    }
+
     let connection = &mut db.get().expect("Failed to get DB Connection");
 
     let get_user_result = user::table
@@ -106,6 +119,36 @@ pub fn me(db: &State<DbConnection>, user: AuthGuard) -> Custom<Json<ApiResponse<
     )
 }
 
+#[post("/user/change-password", format = "application/json", data = "<form>")]
+pub fn change_password(
+    db: &State<DbConnection>,
+    user: AuthGuard,
+    form: Json<UserChangePasswordForm<'_>>,
+) -> Custom<Json<ApiResponse<UserChangePasswordResponse>>> {
+    if let Err(_e) = form.validate() {
+        return Custom(Status::BadRequest, Json(ApiResponse::error("Bad request")));
+    }
+
+    let connection = &mut db.get().expect("Failed to get DB Connection");
+
+    let new_password_hash = hash_password(form.password).unwrap();
+
+    diesel::update(user::table.filter(user::id.eq(user.0.id)))
+        .set(user::password_hash.eq(new_password_hash))
+        .execute(connection)
+        .unwrap();
+
+    Custom(
+        Status::Ok,
+        Json(ApiResponse::success(
+            "Success",
+            UserChangePasswordResponse {
+                user: user.0.into(),
+            },
+        )),
+    )
+}
+
 pub fn set_new_session_token(
     user_id: Uuid,
     connection: &mut PooledConnection<ConnectionManager<PgConnection>>,
@@ -115,7 +158,7 @@ pub fn set_new_session_token(
     diesel::update(user::table.filter(user::id.eq(user_id)))
         .set(user::session_token.eq(&new_token))
         .execute(connection)
-        .expect("Failed to set new session_token for user");
+        .unwrap();
 
     new_token
 }

@@ -16,7 +16,6 @@ export const userApi = (
     async login(params: { username: string; password: string }): Promise<
       IApiResponse<{
         user: { id: string; createdAt: string; updatedAt: string };
-        session: { id: string; createdAt: string; updatedAt: string };
       }>
     > {
       const { data: payload } = await axiosBase.post("/login", params);
@@ -28,8 +27,12 @@ export const userApi = (
     },
     async getMe(nuxtServerInitOptions?: NuxtServerInitOptions): Promise<
       IApiResponse<{
-        user: { id: string; createdAt: string; updatedAt: string };
-        session: { id: string; createdAt: string; updatedAt: string };
+        user: {
+          id: string;
+          username: string;
+          createdAt: string;
+          updatedAt: string;
+        };
       }>
     > {
       console.log("cookies:", nuxtServerInitOptions?.serverSideCookiesRaw);
@@ -38,6 +41,18 @@ export const userApi = (
           Cookie: nuxtServerInitOptions?.serverSideCookiesRaw,
         },
       });
+
+      return payload;
+    },
+    async changePassword(params: { password: string }): Promise<
+      IApiResponse<{
+        user: { id: string; createdAt: string; updatedAt: string };
+      }>
+    > {
+      const { data: payload } = await axiosBase.post(
+        "/change-password",
+        params,
+      );
 
       return payload;
     },

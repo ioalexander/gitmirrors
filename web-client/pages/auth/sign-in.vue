@@ -17,7 +17,7 @@ const router = useRouter();
 const screen = computed(() => authStore.authState.screen);
 
 onMounted(async () => {
-  if (authStore.session) {
+  if (authStore.user) {
     await router.push("/dashboard");
   }
 });

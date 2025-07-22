@@ -2,7 +2,7 @@ import { useApi, type Api } from "~/composables/useApi";
 import type { NuxtServerInitOptions } from "~/plugins/init.server";
 
 interface State {
-  user?: { id: string; createdAt: Date; updatedAt: Date };
+  user?: { id: string; username: string; createdAt: Date; updatedAt: Date };
   authState: {
     screen: string;
     email: string;
@@ -44,7 +44,6 @@ export const useUserStore = defineStore("user", {
         }
 
         const user = meResponse?.data?.user;
-        const session = meResponse?.data?.session;
 
         if (!user) {
           throw new Error("meResponse.data.user is undefined");
@@ -52,6 +51,7 @@ export const useUserStore = defineStore("user", {
 
         this.SET_USER({
           id: user.id,
+          username: user.username,
           updatedAt: new Date(user.updatedAt),
           createdAt: new Date(user.createdAt),
         });
@@ -62,7 +62,12 @@ export const useUserStore = defineStore("user", {
         this.UNSET_USER();
       }
     },
-    SET_USER(user: { id: string; createdAt: Date; updatedAt: Date }) {
+    SET_USER(user: {
+      id: string;
+      username: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }) {
       this.user = { ...user };
     },
     UNSET_USER() {

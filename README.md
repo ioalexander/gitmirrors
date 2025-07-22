@@ -6,6 +6,14 @@
 git clone
 ```
 
+```sh
+cp .env.example .env
+```
+
+Fill the `.env` file.
+
+Your `GID` and `UID` should be filled
+
 ```
 docker-compose up --build
 ```
@@ -14,6 +22,13 @@ docker-compose up --build
 
 ```
 git clone
+```
+
+Fill the `.env` file.
+
+Your `GID` and `UID` should be filled
+
+```
 docker-compose -f docker-compose.dev.yml up
 ```
 
@@ -21,3 +36,6 @@ docker-compose -f docker-compose.dev.yml up
 
 Username: `admin`
 Password: `any`
+
+**Warning!** You should change the password after that.
+Otherwise, the password will still be any.

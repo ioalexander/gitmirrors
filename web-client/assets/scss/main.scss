@@ -1,7 +1,9 @@
 :root {
   --white: #fefefe;
-  --black: #101010;
-  --true-black: #000;
+  --black: #000;
+  --black-100: #101010;
+  --black-200: #202020;
+  --black-300: #303030;
 
   --red: #d80303;
 
@@ -18,23 +20,9 @@
   --gray-100: #fafafa;
 
   --accent-color-blue: #10a5ff;
-  --accent-color-blue-gradient: linear-gradient(
-    45deg,
-    rgba(120, 176, 255, 1) 0%,
-    rgba(0, 95, 255, 1) 99%
-  );
 
-  --accent-color-blue-gradient-darker: linear-gradient(
-    45deg,
-    #3186ffff 0%,
-    #0566ffff 99%
-  );
-
-  --accent-color-blue-gradient-lighter: linear-gradient(
-    45deg,
-    #dfecffff 0%,
-    #c2daffff 99%
-  );
+  --button-background: #10a5ff;
+  --button-hover: #20b5ff;
 
   --status-color-error: #f74720;
 
@@ -45,7 +33,7 @@
 * {
   padding: 0;
   margin: 0;
-  color: var(--black);
+  color: var(--white);
 
   font-family: "Poppins", sans-serif;
   box-sizing: border-box;
@@ -53,7 +41,7 @@
 }
 
 body {
-  background: var(--white);
+  background: var(--black);
 }
 
 button {

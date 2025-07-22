@@ -12,8 +12,11 @@ diesel = { version = "2.2.0", features = [
   "uuid",
 ] }
 dotenv = "0.15.0"
-serde = "1.0.219"
+serde = { version = "1.0.219", features = ["derive"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 uuid = { version = "1.17.0", features = ["serde", "v4"] }
 rand = "0.9.1"
 async-trait = "0.1.88"
+argon2 = "0.5.3"
+base64 = "0.22.1"
+validator = { version = "0.20.0", features = ["derive"] }

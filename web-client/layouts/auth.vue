@@ -17,8 +17,8 @@
 .container {
   width: 100%;
   max-width: 500px;
-  background: var(--white);
-  filter: var(--shadow);
+  background: var(--black);
   border-radius: 16px;
+  border: 1px solid var(--gray-900);
 }
 </style>
