@@ -12,7 +12,7 @@ use crate::db::DbConnection;
 use crate::middlewares::auth::AuthGuard;
 use crate::models::{PublicUser, UserModel};
 use crate::schema::user;
-use crate::utils::crypto::{generate_random_string, hash_password};
+use crate::utils::crypto::{generate_random_string, hash_password, verify_password};
 use crate::utils::response::ApiResponse;
 
 #[derive(Deserialize, Validate)]
@@ -63,7 +63,43 @@ pub fn login(
 
     match get_user_result {
         Ok(user) => {
-            if user.username == "admin" && user.password_hash.is_none() {
+            let user_id = user.id.clone().into();
+            let user_username = user.username.clone();
+            let user_password_hash = user.password_hash.clone();
+
+            if user_username == "admin" && user_password_hash.is_none() {
+                let new_admin_session_token = set_new_session_token(user_id, connection);
+
+                cookie_jar.add(
+                    Cookie::build(("gitmirrors_session_token", new_admin_session_token))
+                        .http_only(true)
+                        .build(),
+                );
+
+                return Custom(
+                    Status::Ok,
+                    Json(ApiResponse::success(
+                        "Login successful",
+                        UserLoginResponse { user: user.into() },
+                    )),
+                );
+            }
+
+            let database_user_password_hash = match user_password_hash {
+                Some(h) => h,
+                None => {
+                    return Custom(
+                        Status::InternalServerError,
+                        Json(ApiResponse::error(
+                            "No password set for non-admin account. Access forbidden",
+                        )),
+                    );
+                }
+            };
+
+            let is_password_match = verify_password(&database_user_password_hash, form.password);
+
+            if (is_password_match) {
                 let new_admin_session_token = set_new_session_token(user.id, connection);
 
                 cookie_jar.add(
