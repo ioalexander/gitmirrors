@@ -1,3 +1,5 @@
+# TODO: dont use alpine and move to slim
+
 FROM rust:1.87-alpine AS builder
 RUN apk add --no-cache musl-dev openssl openssl-dev pkgconfig git
 WORKDIR /usr/src/app
