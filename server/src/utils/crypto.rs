@@ -30,3 +30,16 @@ pub fn verify_password(hash: &str, password: &str) -> bool {
         Err(_) => false,
     }
 }
+
+pub fn sanitize_ssh_key(input: &str) -> String {
+    let normalized = input.replace("\r\n", "\n").replace('\r', "\n");
+
+    let cleaned_lines: Vec<String> = normalized
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(String::from)
+        .collect();
+
+    cleaned_lines.join("\n") + "\n"
+}

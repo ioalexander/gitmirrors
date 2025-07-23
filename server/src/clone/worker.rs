@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::os::unix::fs::PermissionsExt;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::PathBuf;
@@ -15,6 +16,7 @@ use tokio::fs;
 use tokio::io::AsyncWriteExt;
 
 use crate::schema::repository::dsl::*;
+use crate::utils::crypto::sanitize_ssh_key;
 use tokio::process::Command;
 
 use crate::models::RepositoryModel;
@@ -78,18 +80,23 @@ pub async fn clone_worker_run_single_repo(
 
     // check for ssh binary
     let ssh_check = Command::new("ssh").arg("-V").output().await;
-
     if ssh_check.is_err() || !ssh_check.as_ref().unwrap().status.success() {
         return Err(
             "`ssh` binary not found or failed to run. Is `openssh-client` installed?".into(),
         );
     }
-
     println!("[Clone worker] SSH bin found!");
 
     let repo_id = repo.id.to_string();
-    let source_key_opt = repo.git_source_secret_key.clone();
-    let target_key_opt = repo.git_target_secret_key.clone();
+
+    let source_key_opt = repo
+        .git_source_secret_key
+        .as_ref()
+        .map(|k| sanitize_ssh_key(k));
+    let target_key_opt = repo
+        .git_target_secret_key
+        .as_ref()
+        .map(|k| sanitize_ssh_key(k));
 
     let repo_dir = PathBuf::from(CLONE_STORAGE_PATH).join(format!("{}.git", repo_id));
 
@@ -136,18 +143,49 @@ pub async fn clone_worker_run_single_repo(
 
     println!("[Clone worker] keys written!");
 
-    // Build SSH command for source key
-    let git_ssh_source = if source_key_opt.is_some() {
-        Some(format!(
-            "ssh -i {} -o StrictHostKeyChecking=no",
-            source_key_path.to_string_lossy()
-        ))
+    // Sanity checks on keys before using
+    let check_key = |path: &PathBuf| -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        if !path.exists() {
+            return Err(format!("SSH key file missing: {}", path.display()).into());
+        }
+        let meta = std::fs::metadata(path)?;
+        if meta.len() == 0 {
+            return Err(format!("SSH key file is empty: {}", path.display()).into());
+        }
+        // Try opening file for read to confirm accessibility
+        let mut f = std::fs::File::open(path)?;
+        let mut buf = [0u8; 1];
+        if f.read(&mut buf)? == 0 {
+            return Err(format!("SSH key file unreadable: {}", path.display()).into());
+        }
+        Ok(())
+    };
+
+    if source_key_opt.is_some() {
+        check_key(&source_key_path)?;
+    }
+    if target_key_opt.is_some() {
+        check_key(&target_key_path)?;
+    }
+
+    // Use absolute canonicalized paths in SSH commands
+    let source_key_path = if source_key_opt.is_some() {
+        Some(source_key_path.canonicalize()?)
+    } else {
+        None
+    };
+    let target_key_path = if target_key_opt.is_some() {
+        Some(target_key_path.canonicalize()?)
     } else {
         None
     };
 
+    // Build SSH command for source key
+    let git_ssh_source = source_key_path
+        .as_ref()
+        .map(|p| format!("ssh -i {} -o StrictHostKeyChecking=no", p.display()));
+
     println!("Cloning source repo...");
-    // Clone source repo
     let mut cmd = Command::new("git");
     cmd.args([
         "clone",
@@ -160,7 +198,11 @@ pub async fn clone_worker_run_single_repo(
     }
     let output = cmd.output().await?;
     if !output.status.success() {
-        cleanup_keys(&source_key_path, &target_key_path).await;
+        cleanup_keys(
+            &source_key_path.unwrap_or_default(),
+            &target_key_path.unwrap_or_default(),
+        )
+        .await;
         return Err(format!(
             "git clone failed: {}",
             String::from_utf8_lossy(&output.stderr)
@@ -169,14 +211,17 @@ pub async fn clone_worker_run_single_repo(
     }
 
     println!("[Clone worker] Setting push url...");
-    // Set push remote URL
     let output = Command::new("git")
         .current_dir(&repo_dir)
         .args(["remote", "set-url", "--push", "origin", &repo.git_target])
         .output()
         .await?;
     if !output.status.success() {
-        cleanup_keys(&source_key_path, &target_key_path).await;
+        cleanup_keys(
+            &source_key_path.unwrap_or_default(),
+            &target_key_path.unwrap_or_default(),
+        )
+        .await;
         return Err(format!(
             "git remote set-url failed: {}",
             String::from_utf8_lossy(&output.stderr)
@@ -184,18 +229,11 @@ pub async fn clone_worker_run_single_repo(
         .into());
     }
 
-    // Build SSH command for target key
-    let git_ssh_target = if target_key_opt.is_some() {
-        Some(format!(
-            "ssh -i {} -o StrictHostKeyChecking=no",
-            target_key_path.to_string_lossy()
-        ))
-    } else {
-        None
-    };
+    let git_ssh_target = target_key_path
+        .as_ref()
+        .map(|p| format!("ssh -i {} -o StrictHostKeyChecking=no", p.display()));
 
     println!("[Clone worker] Pushing repo...");
-    // Push mirror to target
     let mut cmd = Command::new("git");
     cmd.current_dir(&repo_dir)
         .args(["push", "--mirror", "origin"]);
@@ -206,7 +244,11 @@ pub async fn clone_worker_run_single_repo(
     let output = cmd.output().await?;
     if !output.status.success() {
         println!("[Clone worker] push command failed!");
-        cleanup_keys(&source_key_path, &target_key_path).await;
+        cleanup_keys(
+            &source_key_path.unwrap_or_default(),
+            &target_key_path.unwrap_or_default(),
+        )
+        .await;
         return Err(format!(
             "git push --mirror failed: {}",
             String::from_utf8_lossy(&output.stderr)
@@ -215,8 +257,11 @@ pub async fn clone_worker_run_single_repo(
     }
     println!("[Clone worker] push command succeeded!");
 
-    // Cleanup
-    cleanup_keys(&source_key_path, &target_key_path).await;
+    cleanup_keys(
+        &source_key_path.unwrap_or_default(),
+        &target_key_path.unwrap_or_default(),
+    )
+    .await;
 
     println!(
         "Successfully mirrored repo {} to {}",
