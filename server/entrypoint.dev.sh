@@ -32,4 +32,4 @@ echo "Running diesel migration..."
 diesel migration run
 
 echo "Starting app with cargo watch..."
-exec cargo watch -x run
+exec cargo watch -i clone_storage -x run

@@ -1,3 +1,5 @@
+use std::os::unix::fs::PermissionsExt;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::PathBuf;
 
 use rocket::tokio;
@@ -46,8 +48,23 @@ pub async fn clone_worker_run(
 
     for repo in repositories_to_clone {
         let repo_id = repo.id;
-        if let Err(e) = clone_worker_run_single_repo(repo).await {
-            eprintln!("Failed to clone repo {}: {:?}", repo_id, e);
+
+        // catch panics synchronously around the creation of the future
+        let future = catch_unwind(AssertUnwindSafe(|| clone_worker_run_single_repo(repo)));
+
+        match future {
+            Ok(fut) => {
+                // now await the future and handle its error normally
+                if let Err(e) = fut.await {
+                    eprintln!("Failed to clone repo {}: {:?}", repo_id, e);
+                }
+            }
+            Err(panic) => {
+                eprintln!(
+                    "Panic occurred while creating clone future for repo {}: {:?}",
+                    repo_id, panic
+                );
+            }
         }
     }
 
@@ -57,6 +74,8 @@ pub async fn clone_worker_run(
 pub async fn clone_worker_run_single_repo(
     repo: RepositoryModel,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    println!("[Clone worker] Checking for SSH...");
+
     // check for ssh binary
     let ssh_check = Command::new("ssh").arg("-V").output().await;
 
@@ -65,6 +84,8 @@ pub async fn clone_worker_run_single_repo(
             "`ssh` binary not found or failed to run. Is `openssh-client` installed?".into(),
         );
     }
+
+    println!("[Clone worker] SSH bin found!");
 
     let repo_id = repo.id.to_string();
     let source_key_opt = repo.git_source_secret_key.clone();
@@ -81,21 +102,39 @@ pub async fn clone_worker_run_single_repo(
         fs::remove_dir_all(&repo_dir).await?;
     }
 
-    // Optional: write source key to file
+    println!("[Clone worker] writing keys...");
+
+    // Write source key
     let source_key_path = PathBuf::from(KEY_STORAGE_PATH).join(format!("{}_source_key", repo_id));
     if let Some(source_key) = repo.git_source_secret_key {
         let mut file = fs::File::create(&source_key_path).await?;
         file.write_all(source_key.as_bytes()).await?;
-        // fs::set_permissions(&source_key_path, std::fs::Permissions::from_mode(0o600))?;
+
+        tokio::task::spawn_blocking({
+            let source_key_path = source_key_path.clone();
+            move || {
+                std::fs::set_permissions(&source_key_path, std::fs::Permissions::from_mode(0o600))
+            }
+        })
+        .await??;
     }
 
-    // Optional: write target key to file
+    // Write target key
     let target_key_path = PathBuf::from(KEY_STORAGE_PATH).join(format!("{}_target_key", repo_id));
     if let Some(target_key) = repo.git_target_secret_key {
         let mut file = fs::File::create(&target_key_path).await?;
         file.write_all(target_key.as_bytes()).await?;
-        // fs::set_permissions(&target_key_path, std::fs::Permissions::from_mode(0o600))?;
+
+        tokio::task::spawn_blocking({
+            let target_key_path = target_key_path.clone();
+            move || {
+                std::fs::set_permissions(&target_key_path, std::fs::Permissions::from_mode(0o600))
+            }
+        })
+        .await??;
     }
+
+    println!("[Clone worker] keys written!");
 
     // Build SSH command for source key
     let git_ssh_source = if source_key_opt.is_some() {
@@ -107,9 +146,10 @@ pub async fn clone_worker_run_single_repo(
         None
     };
 
+    println!("Cloning source repo...");
     // Clone source repo
     let mut cmd = Command::new("git");
-    cmd.args(&[
+    cmd.args([
         "clone",
         "--mirror",
         &repo.git_source,
@@ -128,10 +168,11 @@ pub async fn clone_worker_run_single_repo(
         .into());
     }
 
+    println!("[Clone worker] Setting push url...");
     // Set push remote URL
     let output = Command::new("git")
         .current_dir(&repo_dir)
-        .args(&["remote", "set-url", "--push", "origin", &repo.git_target])
+        .args(["remote", "set-url", "--push", "origin", &repo.git_target])
         .output()
         .await?;
     if !output.status.success() {
@@ -153,15 +194,18 @@ pub async fn clone_worker_run_single_repo(
         None
     };
 
+    println!("[Clone worker] Pushing repo...");
     // Push mirror to target
     let mut cmd = Command::new("git");
     cmd.current_dir(&repo_dir)
-        .args(&["push", "--mirror", "origin"]);
+        .args(["push", "--mirror", "origin"]);
     if let Some(ref ssh_cmd) = git_ssh_target {
         cmd.env("GIT_SSH_COMMAND", ssh_cmd);
     }
+    println!("[Clone worker] Executing push command...");
     let output = cmd.output().await?;
     if !output.status.success() {
+        println!("[Clone worker] push command failed!");
         cleanup_keys(&source_key_path, &target_key_path).await;
         return Err(format!(
             "git push --mirror failed: {}",
@@ -169,6 +213,7 @@ pub async fn clone_worker_run_single_repo(
         )
         .into());
     }
+    println!("[Clone worker] push command succeeded!");
 
     // Cleanup
     cleanup_keys(&source_key_path, &target_key_path).await;

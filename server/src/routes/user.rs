@@ -63,7 +63,7 @@ pub fn login(
 
     match get_user_result {
         Ok(user) => {
-            let user_id = user.id.clone().into();
+            let user_id = user.id;
             let user_username = user.username.clone();
             let user_password_hash = user.password_hash.clone();
 
@@ -99,7 +99,7 @@ pub fn login(
 
             let is_password_match = verify_password(&database_user_password_hash, form.password);
 
-            if (is_password_match) {
+            if is_password_match {
                 let new_admin_session_token = set_new_session_token(user.id, connection);
 
                 cookie_jar.add(
@@ -133,7 +133,7 @@ pub fn login(
 }
 
 #[get("/user/me")]
-pub fn me(db: &State<DbConnection>, user: AuthGuard) -> Custom<Json<ApiResponse<UserMeResponse>>> {
+pub fn me(user: AuthGuard) -> Custom<Json<ApiResponse<UserMeResponse>>> {
     match &user.0.session_token {
         Some(s) => s.clone(),
         None => {
