@@ -1,3 +1,4 @@
 /pg_data
 /rs_data
+/server/clone_storage
 .env

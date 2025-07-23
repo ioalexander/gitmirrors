@@ -9,7 +9,8 @@ mod middlewares;
 mod models;
 mod schema;
 mod utils;
-use std::time::Duration;
+use futures::FutureExt;
+use std::{panic::AssertUnwindSafe, time::Duration};
 
 #[macro_use]
 extern crate rocket;
@@ -29,9 +30,27 @@ async fn rocket() -> _ {
         let pool = pool.clone();
         async move {
             loop {
-                if let Err(e) = clone::worker::clone_worker_run(&pool).await {
-                    eprintln!("clone_items error: {:?}", e);
+                let result = AssertUnwindSafe(clone::worker::clone_worker_run(&pool))
+                    .catch_unwind()
+                    .await;
+
+                match result {
+                    Ok(Ok(())) => {
+                        // all good
+                    }
+
+                    // clone_worker_run returned Err(e)
+                    Ok(Err(e)) => {
+                        eprintln!("clone_worker_run error: {:?}", e);
+                    }
+
+                    // it panicked
+                    Err(panic_payload) => {
+                        eprintln!("clone_worker_run panicked: {:?}", panic_payload);
+                    }
                 }
+
+                // always sleep and loop again
                 tokio::time::sleep(Duration::from_secs(5)).await;
             }
         }
