@@ -16,6 +16,7 @@ pub struct UserModel {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PublicUser {
     pub id: Uuid,
     pub username: String,
@@ -40,6 +41,7 @@ impl From<UserModel> for PublicUser {
 #[diesel(table_name = crate::schema::repository)]
 #[diesel(belongs_to(UserModel, foreign_key = user_id))]
 #[diesel(check_for_backend(diesel::pg::Pg))]
+#[serde(rename_all = "camelCase")]
 pub struct RepositoryModel {
     pub id: Uuid,
     pub user_id: Uuid,

@@ -13,6 +13,13 @@ use crate::schema::repository;
 use crate::utils::response::ApiResponse;
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetRepositoryResponse {
+    pub repository: RepositoryModel,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetRepositoriesResponse {
     pub repositories: Vec<RepositoryModel>,
 }
@@ -68,6 +75,49 @@ pub struct AddRepositoryForm {
 #[serde(rename_all = "camelCase")]
 pub struct AddRepositoryResponse {
     pub created_repository: RepositoryModel,
+}
+
+#[get("/repository/<repo_id>")]
+pub fn get_repository_by_id(
+    db: &State<DbConnection>,
+    user: AuthGuard,
+    repo_id: String,
+) -> Custom<Json<ApiResponse<GetRepositoryResponse>>> {
+    use crate::schema::repository::dsl::*;
+
+    let connection = &mut db.get().unwrap();
+
+    let parsed_id = match uuid::Uuid::parse_str(&repo_id) {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            return Custom(
+                Status::BadRequest,
+                Json(ApiResponse::error("Invalid repository ID")),
+            );
+        }
+    };
+
+    match repository
+        .filter(id.eq(parsed_id).and(user_id.eq(user.0.id)))
+        .first::<RepositoryModel>(connection)
+        .optional()
+    {
+        Ok(Some(repo)) => Custom(
+            Status::Ok,
+            Json(ApiResponse::success(
+                "Repository fetched successfully",
+                GetRepositoryResponse { repository: repo },
+            )),
+        ),
+        Ok(None) => Custom(
+            Status::NotFound,
+            Json(ApiResponse::error("Repository not found")),
+        ),
+        Err(_) => Custom(
+            Status::InternalServerError,
+            Json(ApiResponse::error("Failed to fetch repository")),
+        ),
+    }
 }
 
 #[get("/repository")]

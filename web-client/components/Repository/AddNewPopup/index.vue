@@ -69,6 +69,7 @@ const model = defineModel<boolean>();
 const api = useApi();
 const repositoryStore = useRepositoryStore();
 const toast = useToast();
+const router = useRouter();
 
 const state = reactive({
   form: {
@@ -176,6 +177,8 @@ const onSubmit = async () => {
     if (!res?.createdRepository) {
       toast.error("Failed to create Repository");
     }
+
+    await router.push(`/dashboard/repository/${res?.createdRepository.id}`);
   } catch (e: any) {
     toast.error(`Failed to create Repository. Message: ${e?.message}`);
   } finally {

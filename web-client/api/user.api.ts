@@ -35,7 +35,6 @@ export const userApi = (
         };
       }>
     > {
-      console.log("cookies:", nuxtServerInitOptions?.serverSideCookiesRaw);
       const { data: payload } = await axiosBase.get("/me", {
         headers: {
           Cookie: nuxtServerInitOptions?.serverSideCookiesRaw,

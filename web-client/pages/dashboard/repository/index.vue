@@ -1,8 +1,9 @@
 <template>
+  <Topbar />
   <div :class="$style.container">
     <RepositoryListContainer>
-      <RepositoryListItem v-for="item in repositories" :repository="item" />
       <RepositoryListAddNew @click="state.isAddNewPopupOpen = true" />
+      <RepositoryListItem v-for="item in repositories" :repository="item" />
     </RepositoryListContainer>
   </div>
   <RepositoryAddNewPopup v-model="isAddNewPopupOpen" />
@@ -16,6 +17,7 @@ const api = useApi();
 const repositoryStore = useRepositoryStore();
 
 const state = reactive({
+  isInitialGetAllRequestComplete: false,
   isAddNewPopupOpen: false,
 });
 
@@ -34,6 +36,8 @@ onMounted(async () => {
     }
   } catch (e) {
     console.error(e);
+  } finally {
+    state.isInitialGetAllRequestComplete = true;
   }
 });
 </script>

@@ -8,6 +8,7 @@ pub fn routes() -> Vec<Route> {
         user::me,
         user::change_password,
         repository::get_all_repositories,
-        repository::add_repository
+        repository::add_repository,
+        repository::get_repository_by_id
     ]
 }

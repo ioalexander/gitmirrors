@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { NuxtServerInitOptions } from "~/plugins/init.server";
 import type { IApiResponse } from "~/types/api";
 import type { Repository } from "~/types/repository";
 
@@ -16,6 +17,18 @@ export const repositoryApi = (config: { baseUrl: string }) => {
       }>
     > {
       const { data: payload } = await axiosBase.get("/");
+
+      return payload;
+    },
+    async getRepository(
+      id: string,
+      nuxtServerInitOptions?: NuxtServerInitOptions,
+    ): Promise<IApiResponse<{ repository: Repository }>> {
+      const { data: payload } = await axiosBase.get(`/${id}`, {
+        headers: {
+          Cookie: nuxtServerInitOptions?.serverSideCookiesRaw,
+        },
+      });
 
       return payload;
     },

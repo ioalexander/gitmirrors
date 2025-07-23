@@ -10,6 +10,7 @@
 </template>
 <style lang="scss" module>
 .item {
+  height: 200px;
   border-radius: 16px;
   cursor: pointer;
 
