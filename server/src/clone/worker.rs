@@ -3,6 +3,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::PathBuf;
 
+use chrono::Utc;
 use rocket::tokio;
 
 use diesel::prelude::*;
@@ -52,7 +53,9 @@ pub async fn clone_worker_run(
         let repo_id = repo.id;
 
         // catch panics synchronously around the creation of the future
-        let future = catch_unwind(AssertUnwindSafe(|| clone_worker_run_single_repo(repo)));
+        let future = catch_unwind(AssertUnwindSafe(|| {
+            clone_worker_run_single_repo(pool, repo)
+        }));
 
         match future {
             Ok(fut) => {
@@ -74,10 +77,9 @@ pub async fn clone_worker_run(
 }
 
 pub async fn clone_worker_run_single_repo(
+    pool: &Pool<ConnectionManager<PgConnection>>,
     repo: RepositoryModel,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("[Clone worker] Checking for SSH...");
-
     // check for ssh binary
     let ssh_check = Command::new("ssh").arg("-V").output().await;
     if ssh_check.is_err() || !ssh_check.as_ref().unwrap().status.success() {
@@ -85,7 +87,6 @@ pub async fn clone_worker_run_single_repo(
             "`ssh` binary not found or failed to run. Is `openssh-client` installed?".into(),
         );
     }
-    println!("[Clone worker] SSH bin found!");
 
     let repo_id = repo.id.to_string();
 
@@ -108,8 +109,6 @@ pub async fn clone_worker_run_single_repo(
     if fs::metadata(&repo_dir).await.is_ok() {
         fs::remove_dir_all(&repo_dir).await?;
     }
-
-    println!("[Clone worker] writing keys...");
 
     // Write source key
     let source_key_path = PathBuf::from(KEY_STORAGE_PATH).join(format!("{}_source_key", repo_id));
@@ -140,8 +139,6 @@ pub async fn clone_worker_run_single_repo(
         })
         .await??;
     }
-
-    println!("[Clone worker] keys written!");
 
     // Sanity checks on keys before using
     let check_key = |path: &PathBuf| -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -185,7 +182,6 @@ pub async fn clone_worker_run_single_repo(
         .as_ref()
         .map(|p| format!("ssh -i {} -o StrictHostKeyChecking=no", p.display()));
 
-    println!("Cloning source repo...");
     let mut cmd = Command::new("git");
     cmd.args([
         "clone",
@@ -210,7 +206,6 @@ pub async fn clone_worker_run_single_repo(
         .into());
     }
 
-    println!("[Clone worker] Setting push url...");
     let output = Command::new("git")
         .current_dir(&repo_dir)
         .args(["remote", "set-url", "--push", "origin", &repo.git_target])
@@ -233,17 +228,14 @@ pub async fn clone_worker_run_single_repo(
         .as_ref()
         .map(|p| format!("ssh -i {} -o StrictHostKeyChecking=no", p.display()));
 
-    println!("[Clone worker] Pushing repo...");
     let mut cmd = Command::new("git");
     cmd.current_dir(&repo_dir)
         .args(["push", "--mirror", "origin"]);
     if let Some(ref ssh_cmd) = git_ssh_target {
         cmd.env("GIT_SSH_COMMAND", ssh_cmd);
     }
-    println!("[Clone worker] Executing push command...");
     let output = cmd.output().await?;
     if !output.status.success() {
-        println!("[Clone worker] push command failed!");
         cleanup_keys(
             &source_key_path.unwrap_or_default(),
             &target_key_path.unwrap_or_default(),
@@ -255,7 +247,6 @@ pub async fn clone_worker_run_single_repo(
         )
         .into());
     }
-    println!("[Clone worker] push command succeeded!");
 
     cleanup_keys(
         &source_key_path.unwrap_or_default(),
@@ -263,11 +254,28 @@ pub async fn clone_worker_run_single_repo(
     )
     .await;
 
-    println!(
-        "Successfully mirrored repo {} to {}",
-        repo.id, repo.git_target
-    );
+    clone_worker_mark_repo_as_cloned(pool, repo.id).await?;
+
     Ok(())
+}
+
+pub async fn clone_worker_mark_repo_as_cloned(
+    pool: &Pool<ConnectionManager<PgConnection>>,
+    repo_id: uuid::Uuid,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let pool = pool.clone();
+
+    tokio::task::spawn_blocking(move || {
+        let mut conn = pool
+            .get()
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+        diesel::update(repository.filter(id.eq(repo_id)))
+            .set(last_clone_at.eq(Utc::now().naive_utc()))
+            .execute(&mut conn)
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+        Ok(())
+    })
+    .await?
 }
 
 async fn cleanup_keys(source: &PathBuf, target: &PathBuf) {

@@ -41,5 +41,11 @@ pub fn sanitize_ssh_key(input: &str) -> String {
         .map(String::from)
         .collect();
 
-    cleaned_lines.join("\n") + "\n"
+    let mut cleaned_key = cleaned_lines.join("\n");
+
+    if !cleaned_key.ends_with('\n') {
+        cleaned_key.push('\n');
+    }
+
+    cleaned_key
 }
