@@ -20,3 +20,4 @@ async-trait = "0.1.88"
 argon2 = "0.5.3"
 base64 = "0.22.1"
 validator = { version = "0.20.0", features = ["derive"] }
+tokio = { version = "1.46.1", features = ["full", "process"] }
