@@ -1,3 +1,4 @@
+import { repositoryApi } from "~/api/repository.api";
 import { userApi } from "~/api/user.api";
 import type { NuxtServerInitOptions } from "~/plugins/init.server";
 
@@ -7,6 +8,7 @@ export function createApiClient(
 ) {
   return {
     user: userApi({ ...config }, options),
+    repository: repositoryApi({ ...config }),
   };
 }
 

@@ -2,7 +2,9 @@
   <div :class="$style.container">
     <Sidebar />
     <div :class="$style.content">
-      <slot />
+      <Transition name="slide-fade" mode="out-in">
+        <slot />
+      </Transition>
     </div>
   </div>
 </template>

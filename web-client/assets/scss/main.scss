@@ -1,6 +1,8 @@
 :root {
   --white: #fefefe;
   --black: #000;
+  --black-transparent: rgba(0, 0, 0, 0.5);
+  --black-transparent-backdrop: blur(5px);
   --black-100: #101010;
   --black-200: #202020;
   --black-300: #303030;
@@ -76,6 +78,17 @@ input {
   outline: none;
 }
 
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove arrows in Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 a {
   color: var(--accent-color-blue);
 }
@@ -83,4 +96,49 @@ a {
 strong {
   font-weight: 800;
   color: var(--true-black);
+}
+
+.fade-blur-enter-active,
+.fade-blur-leave-active {
+  transition:
+    opacity 0.4s ease,
+    filter 0.4s ease;
+}
+
+.fade-blur-enter-from,
+.fade-blur-leave-to {
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.fade-blur-enter-to,
+.fade-blur-leave-from {
+  opacity: 1;
+  filter: blur(0px);
+}
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.4s ease;
+  will-change: opacity, transform;
+}
+
+.slide-fade-enter-from {
+  opacity: 0;
+  transform: translateX(50px);
+}
+
+.slide-fade-enter-to {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.slide-fade-leave-from {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(50px);
 }

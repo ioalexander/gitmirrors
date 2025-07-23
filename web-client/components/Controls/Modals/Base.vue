@@ -32,7 +32,7 @@ const props = defineProps({
   align-items: center;
 
   &.isOpen {
-    background: rgb(0, 0, 0, 0.3);
+    background: rgb(0, 0, 0, 0);
     pointer-events: all;
 
     .window {
@@ -45,7 +45,9 @@ const props = defineProps({
     opacity: 0;
     transition: 0.5s;
     transform: translateY(-20px);
-    background: var(--white);
+    background: var(--black-transparent);
+    backdrop-filter: var(--black-transparent-backdrop);
+    border: 1px solid var(--gray-900);
     padding: 20px;
     margin: auto;
     border-radius: 16px;

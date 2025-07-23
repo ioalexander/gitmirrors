@@ -3,13 +3,13 @@ import { type NuxtServerInitOptions } from "~/plugins/init.server";
 import { useUserStore } from "~/store/user.store";
 import { createApiClient } from "~/factories/api.factory";
 import axios from "axios";
+import { useRepositoryStore } from "./repository.store";
 
 export const useStore = defineStore("root", {
   actions: {
     async nuxtServerInit(nuxtApp: any, options: NuxtServerInitOptions) {
       const isServer = !!nuxtApp.ssrContext;
 
-      console.log("nuxtServerInit hit...");
       const config = useRuntimeConfig();
       const api = createApiClient(
         { baseUrl: config.public.serverApiBase },
@@ -35,14 +35,9 @@ export const useStore = defineStore("root", {
         });
       }
 
-      console.log("server health ok");
-
-      console.log("initializing user store...");
       const userStore = useUserStore();
+      useRepositoryStore();
       await userStore.getMe(api, options);
-      console.log("user: ", userStore.user);
-
-      console.log("all stores initialized!");
     },
   },
 });

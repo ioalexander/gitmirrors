@@ -1,6 +1,6 @@
 # GitMirrors - clone repositories automatically
 
-# Running GitMirrors
+## Running GitMirrors
 
 ```
 git clone
@@ -18,7 +18,7 @@ Your `GID` and `UID` should be filled
 docker-compose up --build
 ```
 
-# Develop GitMirrors
+## Develop GitMirrors
 
 ```
 git clone
@@ -32,10 +32,10 @@ Your `GID` and `UID` should be filled
 docker-compose -f docker-compose.dev.yml up
 ```
 
-# First login
+## First login
 
 Username: `admin`
-Password: `any`
+Password: `any_random_string`
 
 **Warning!** You should change the password after that.
 Otherwise, the password will still be any.

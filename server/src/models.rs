@@ -33,3 +33,39 @@ impl From<UserModel> for PublicUser {
         }
     }
 }
+
+#[derive(
+    Queryable, Selectable, Identifiable, Associations, PartialEq, Debug, Serialize, Deserialize,
+)]
+#[diesel(table_name = crate::schema::repository)]
+#[diesel(belongs_to(UserModel, foreign_key = user_id))]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct RepositoryModel {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub name: String,
+    pub url: Option<String>,
+    pub is_enabled: bool,
+    pub git_source: String,
+    pub git_source_secret_key: Option<String>,
+    pub git_target: String,
+    pub git_target_secret_key: Option<String>,
+    pub git_clone_period_seconds: i32,
+    pub last_clone_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = crate::schema::repository)]
+pub struct InsertableRepositoryModel<'a> {
+    pub user_id: Uuid,
+    pub name: &'a str,
+    pub url: Option<&'a str>,
+    pub is_enabled: bool,
+    pub git_source: &'a str,
+    pub git_source_secret_key: Option<&'a str>,
+    pub git_target: &'a str,
+    pub git_target_secret_key: Option<&'a str>,
+    pub git_clone_period_seconds: i32,
+}
