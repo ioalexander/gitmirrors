@@ -1,7 +1,27 @@
 <template>
   <Topbar>
-    <h1 :class="$style.topbarTitle">{{ repository?.name }}</h1>
+    <div :class="$style.topbarContent">
+      <h1 :class="$style.title">{{ repository?.name }}</h1>
+      <div :class="$style.right">
+        <ControlsButton is-red @click="state.isDeleteConfirmModalOpen = true"
+          >Delete</ControlsButton
+        >
+      </div>
+    </div>
   </Topbar>
+  <ControlsModalsConfirm
+    v-model="isDeleteConfirmModalOpenModel"
+    is-red
+    @cancel="state.isDeleteConfirmModalOpen = false"
+    @confirm="deleteRepository"
+  >
+    <template #title>Delete "{{ repository?.name }}"?</template>
+    <template #content
+      >Are you sure you want to delete repository "{{ repository?.name }}"?
+      <br />
+      You can't undo this.</template
+    >
+  </ControlsModalsConfirm>
   <div :class="$style.grid">
     <RepositoryInfoTab :repository="repository" />
     <RepositoryCooldownTab
@@ -12,13 +32,16 @@
 </template>
 <script setup lang="ts">
 import { useToast } from "vue-toastification";
+import { useRepositoryStore } from "~/store/repository.store";
 import type { Repository } from "~/types/repository";
 
 const route = useRoute();
+const repositoryStore = useRepositoryStore();
 const api = useApi();
 const headers = useRequestHeaders(["cookie"]);
 const toast = useToast();
 const rawCookies = headers.cookie;
+const router = useRouter();
 
 let cloneDueUpdateIntervalId: number | undefined;
 let fetchRepositoryIntervalId: number | undefined;
@@ -27,10 +50,17 @@ const state = reactive<{
   repository: Repository | undefined;
   cloneDue: number | undefined;
   cloneDueExpired: boolean;
+  isDeleteConfirmModalOpen: boolean;
 }>({
   repository: undefined,
   cloneDue: undefined,
   cloneDueExpired: false,
+  isDeleteConfirmModalOpen: false,
+});
+
+const isDeleteConfirmModalOpenModel = computed({
+  get: () => state.isDeleteConfirmModalOpen,
+  set: (val) => (state.isDeleteConfirmModalOpen = val),
 });
 
 const repository = computed(() => state.repository);
@@ -90,6 +120,22 @@ const fetchRepositoryInterval = async () => {
   }
 };
 
+const deleteRepository = async () => {
+  const res = await repositoryStore.deleteRepository(
+    api,
+    repository.value?.id as string,
+  );
+
+  if (!res?.deletedRepository) {
+    toast.error("Failed to delete repository!");
+    return;
+  }
+
+  toast.success("Repository deleted succesfully!");
+
+  await router.push("/dashboard/repository");
+};
+
 onMounted(() => {
   updateCloneDue();
   cloneDueUpdateIntervalId = window.setInterval(updateCloneDue, 200);
@@ -104,8 +150,18 @@ onUnmounted(() => {
 await fetchRepository(route.params.id as string);
 </script>
 <style lang="scss" module>
-.topbarTitle {
-  font-size: 20px;
+.topbarContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .title {
+    font-size: 20px;
+  }
+  .right {
+    display: flex;
+  }
 }
 .grid {
   width: 100%;

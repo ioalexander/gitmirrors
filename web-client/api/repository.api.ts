@@ -32,6 +32,13 @@ export const repositoryApi = (config: { baseUrl: string }) => {
 
       return payload;
     },
+    async deleteRepository(
+      id: string,
+    ): Promise<IApiResponse<{ repository: Repository }>> {
+      const { data: payload } = await axiosBase.delete(`/${id}`);
+
+      return payload;
+    },
     async addRepository(
       data: Omit<Repository, "id" | "createdAt" | "updatedAt" | "lastCloneAt">,
     ): Promise<IApiResponse<{ createdRepository: Repository }>> {

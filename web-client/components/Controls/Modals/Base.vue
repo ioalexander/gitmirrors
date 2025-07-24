@@ -32,7 +32,8 @@ const props = defineProps({
   align-items: center;
 
   &.isOpen {
-    background: rgb(0, 0, 0, 0);
+    background: rgb(0, 0, 0, 0.2);
+    backdrop-filter: var(--black-transparent-backdrop);
     pointer-events: all;
 
     .window {

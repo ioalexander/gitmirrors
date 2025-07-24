@@ -38,6 +38,20 @@ export const useRepositoryStore = defineStore("repository", {
         console.error(e);
       }
     },
+    async deleteRepository(api: Api, id: string) {
+      try {
+        const res = await api.repository.deleteRepository(id);
+        const deletedRepository = res?.data.repository;
+
+        this.repositories = this.repositories.filter(
+          (r) => r.id !== deletedRepository?.id,
+        );
+
+        return { deletedRepository };
+      } catch (e: any) {
+        console.error(e);
+      }
+    },
     SET_REPOSITORIES(repositories: Repository[]) {
       this.repositories = repositories;
     },

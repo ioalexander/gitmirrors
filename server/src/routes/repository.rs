@@ -20,6 +20,12 @@ pub struct GetRepositoryResponse {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DeleteRepositoryResponse {
+    pub repository: RepositoryModel,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetRepositoriesResponse {
     pub repositories: Vec<RepositoryModel>,
 }
@@ -109,6 +115,61 @@ pub fn get_repository_by_id(
                 GetRepositoryResponse { repository: repo },
             )),
         ),
+        Ok(None) => Custom(
+            Status::NotFound,
+            Json(ApiResponse::error("Repository not found")),
+        ),
+        Err(_) => Custom(
+            Status::InternalServerError,
+            Json(ApiResponse::error("Failed to fetch repository")),
+        ),
+    }
+}
+
+#[delete("/repository/<repo_id>")]
+pub fn delete_repository_by_id(
+    db: &State<DbConnection>,
+    user: AuthGuard,
+    repo_id: String,
+) -> Custom<Json<ApiResponse<DeleteRepositoryResponse>>> {
+    use crate::schema::repository::dsl::*;
+
+    let connection = &mut db.get().unwrap();
+
+    let parsed_id = match uuid::Uuid::parse_str(&repo_id) {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            return Custom(
+                Status::BadRequest,
+                Json(ApiResponse::error("Invalid repository ID")),
+            );
+        }
+    };
+
+    match repository
+        .filter(id.eq(parsed_id).and(user_id.eq(user.0.id)))
+        .first::<RepositoryModel>(connection)
+        .optional()
+    {
+        Ok(Some(repo)) => {
+            if diesel::delete(repository.filter(id.eq(parsed_id)))
+                .execute(connection)
+                .is_err()
+            {
+                return Custom(
+                    Status::InternalServerError,
+                    Json(ApiResponse::error("Failed to delete repository")),
+                );
+            }
+
+            Custom(
+                Status::Ok,
+                Json(ApiResponse::success(
+                    "Repository deleted successfully",
+                    DeleteRepositoryResponse { repository: repo },
+                )),
+            )
+        }
         Ok(None) => Custom(
             Status::NotFound,
             Json(ApiResponse::error("Repository not found")),
