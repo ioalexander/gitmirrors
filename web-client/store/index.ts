@@ -4,6 +4,7 @@ import { useUserStore } from "~/store/user.store";
 import { createApiClient } from "~/factories/api.factory";
 import axios from "axios";
 import { useRepositoryStore } from "./repository.store";
+import { useUiStore } from "./ui.store";
 
 export const useStore = defineStore("root", {
   actions: {
@@ -37,6 +38,7 @@ export const useStore = defineStore("root", {
 
       const userStore = useUserStore();
       useRepositoryStore();
+      useUiStore();
       await userStore.getMe(api, options);
     },
   },

@@ -75,7 +75,7 @@ const props = defineProps({
 }
 
 .isGray {
-  background: var(--black-100);
+  background: var(--black-100-transparent);
   color: var(--white);
 
   .content {

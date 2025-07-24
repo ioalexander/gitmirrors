@@ -17,7 +17,7 @@
 .container {
   width: 100%;
   max-width: 500px;
-  background: var(--black);
+  background: var(--black-transparent);
   border-radius: 16px;
   border: 1px solid var(--gray-900);
 }

@@ -28,6 +28,11 @@
       grid-template-columns: 1fr 1fr;
     }
   }
+  @media all and (max-width: 900px) {
+    & {
+      grid-template-columns: 1fr;
+    }
+  }
 }
 
 .list > * {

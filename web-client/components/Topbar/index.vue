@@ -1,10 +1,18 @@
 <template>
-  <div :class="$style.spacer">
+  <div :class="[$style.spacer, { [$style.fold]: isSidebarFold }]">
     <header :class="$style.header">
       <slot />
     </header>
   </div>
 </template>
+
+<script setup lang="ts">
+import { useUiStore } from "~/store/ui.store";
+
+const uiStore = useUiStore();
+
+const isSidebarFold = computed(() => uiStore.isSidebarFold);
+</script>
 
 <style lang="scss" module>
 .spacer {
@@ -24,6 +32,15 @@
     height: 80px;
     background: var(--black-transparent);
     backdrop-filter: var(--black-transparent-backdrop);
+    filter: var(--shadow-large);
+    transition: 0.5s;
+  }
+}
+
+.spacer.fold {
+  .header {
+    width: calc(100% - 80px);
+    left: 80px;
   }
 }
 </style>

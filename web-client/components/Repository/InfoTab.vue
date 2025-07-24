@@ -1,33 +1,29 @@
 <template>
-  <section :class="$style.container">
+  <ControlsPanel :class="$style.container">
     <h2 :class="$style.name">{{ props.repository?.name }}</h2>
     <ul :class="$style.additionalInfo">
-      <li :class="$style.item">
-        <div :class="$style.label">UUID:</div>
-        <div :class="$style.value">{{ props.repository?.id }}</div>
-      </li>
-      <li :class="$style.item">
-        <div :class="$style.label">Url:</div>
-        <div :class="$style.value">{{ props.repository?.url }}</div>
-      </li>
-      <li :class="$style.item">
-        <div :class="$style.label">Created at:</div>
-        <div :class="$style.value">{{ formattedCreatedAt }}</div>
-      </li>
-      <li :class="$style.item">
-        <div :class="$style.label">git Source:</div>
-        <div :class="$style.value">{{ props.repository?.gitSource }}</div>
-      </li>
-      <li :class="$style.item">
-        <div :class="$style.label">git Target:</div>
-        <div :class="$style.value">{{ props.repository?.gitTarget }}</div>
-      </li>
+      <InfoTabItem icon="material-symbols:grid-3x3" label="UUID">
+        {{ props.repository?.id }}
+      </InfoTabItem>
+      <InfoTabItem icon="streamline:link-chain" label="Url">
+        {{ props.repository?.url }}
+      </InfoTabItem>
+      <InfoTabItem icon="material-symbols:alarm-add" label="Created at">
+        {{ formattedCreatedAt }}
+      </InfoTabItem>
+      <InfoTabItem icon="material-symbols:frame-source" label="git Source">
+        {{ props.repository?.gitSource }}
+      </InfoTabItem>
+      <InfoTabItem icon="mdi:target" label="git Target">
+        {{ props.repository?.gitTarget }}
+      </InfoTabItem>
     </ul>
-  </section>
+  </ControlsPanel>
 </template>
 
 <script setup lang="ts">
 import type { Repository } from "~/types/repository";
+import InfoTabItem from "./InfoTabItem.vue";
 
 const props = defineProps<{
   repository?: Repository;
@@ -67,16 +63,9 @@ const formattedCreatedAt = computed(() => {
 
   .additionalInfo {
     list-style: none;
-
-    .item {
-      display: grid;
-      grid-template-columns: 100px 1fr;
-
-      & > * {
-        color: var(--gray-600);
-        font-size: 14px;
-      }
-    }
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 10px;
   }
 }
 </style>

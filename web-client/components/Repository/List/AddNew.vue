@@ -13,6 +13,7 @@
   height: 200px;
   border-radius: 16px;
   cursor: pointer;
+  transition: 0.2s;
 
   .border {
     width: 100%;
@@ -32,7 +33,7 @@
   }
 
   &:hover {
-    background: var(--black-100);
+    background: var(--black-transparent-hover);
   }
 }
 </style>

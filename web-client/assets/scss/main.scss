@@ -1,11 +1,15 @@
 :root {
   --white: #fefefe;
-  --black: #000;
-  --black-transparent: rgba(0, 0, 0, 0.5);
+  --black: #222222;
+  --black-transparent: #22222260;
+  --black-transparent-hover: #44444450;
   --black-transparent-backdrop: blur(5px);
-  --black-100: #101010;
-  --black-200: #202020;
-  --black-300: #303030;
+  --black-100: #333333;
+  --black-100-transparent: #33333360;
+  --black-200: #444444;
+  --black-200-transparent: #44444460;
+  --black-300: #555555;
+  --black-300-transparent: #55555560;
 
   --red: #d80303;
 
@@ -22,6 +26,11 @@
   --gray-100: #fafafa;
 
   --accent-color-blue: #10a5ff;
+  --accent-color-blue-dark-gradient-background: linear-gradient(
+    135deg,
+    rgba(37, 127, 255, 0.1) 0%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
 
   --button-background: #10a5ff;
   --button-hover: #20b5ff;
@@ -29,6 +38,7 @@
   --status-color-error: #f74720;
 
   --shadow: drop-shadow(0 0 3px #00000044);
+  --shadow-large: drop-shadow(0 0 20px #00000044);
   --shadow-light: drop-shadow(0 0 3px #00000022);
 }
 
@@ -42,8 +52,12 @@
   font-size: 16px;
 }
 
-body {
+html {
   background: var(--black);
+}
+
+body {
+  background: var(--accent-color-blue-dark-gradient-background);
 }
 
 button {

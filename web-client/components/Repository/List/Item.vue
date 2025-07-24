@@ -1,5 +1,5 @@
 <template>
-  <div :class="$style.item">
+  <ControlsPanel :class="$style.item">
     <div :class="$style.info">
       <h2 :class="$style.title">{{ repository.name }}</h2>
       <a :class="$style.url" :href="repository.url" target="_blank">
@@ -21,7 +21,7 @@
         />
       </NuxtLink>
     </div>
-  </div>
+  </ControlsPanel>
 </template>
 <script setup lang="ts">
 import Button from "~/components/Controls/Button.vue";
@@ -72,11 +72,12 @@ const props = defineProps<{
     justify-content: flex-end;
 
     .view {
-      background: var(--black-200);
+      background: var(--black-200-transparent);
       padding: 10px 20px;
       border-radius: 8px;
       color: var(--white);
       text-decoration: none;
+      border: 1px solid var(--gray-900);
 
       &:hover {
         filter: brightness(110%);
