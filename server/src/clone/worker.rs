@@ -110,34 +110,16 @@ pub async fn clone_worker_run_single_repo(
         fs::remove_dir_all(&repo_dir).await?;
     }
 
-    // Write source key
+    // Write source key to file
     let source_key_path = PathBuf::from(KEY_STORAGE_PATH).join(format!("{}_source_key", repo_id));
     if let Some(source_key) = repo.git_source_secret_key {
-        let mut file = fs::File::create(&source_key_path).await?;
-        file.write_all(source_key.as_bytes()).await?;
-
-        tokio::task::spawn_blocking({
-            let source_key_path = source_key_path.clone();
-            move || {
-                std::fs::set_permissions(&source_key_path, std::fs::Permissions::from_mode(0o600))
-            }
-        })
-        .await??;
+        write_key_file(&source_key_path, &source_key).await?;
     }
 
-    // Write target key
+    // Write target key to file
     let target_key_path = PathBuf::from(KEY_STORAGE_PATH).join(format!("{}_target_key", repo_id));
     if let Some(target_key) = repo.git_target_secret_key {
-        let mut file = fs::File::create(&target_key_path).await?;
-        file.write_all(target_key.as_bytes()).await?;
-
-        tokio::task::spawn_blocking({
-            let target_key_path = target_key_path.clone();
-            move || {
-                std::fs::set_permissions(&target_key_path, std::fs::Permissions::from_mode(0o600))
-            }
-        })
-        .await??;
+        write_key_file(&target_key_path, &target_key).await?;
     }
 
     // Sanity checks on keys before using
@@ -158,8 +140,10 @@ pub async fn clone_worker_run_single_repo(
         Ok(())
     };
 
-    if source_key_opt.is_some() {
-        check_key(&source_key_path)?;
+    if let Some(source_key) = source_key_opt.as_ref() {
+        if !source_key.trim().is_empty() {
+            check_key(&source_key_path)?;
+        }
     }
     if target_key_opt.is_some() {
         check_key(&target_key_path)?;
@@ -276,6 +260,24 @@ pub async fn clone_worker_mark_repo_as_cloned(
         Ok(())
     })
     .await?
+}
+
+async fn write_key_file(path: &PathBuf, key: &str) -> std::io::Result<()> {
+    let mut file = fs::File::create(path).await?;
+
+    // ensure that key file ends with new line. Otherwise it will fail
+    let mut content = key.trim_end().to_string();
+    content.push('\n');
+
+    file.write_all(content.as_bytes()).await?;
+
+    tokio::task::spawn_blocking({
+        let path = path.clone();
+        move || std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))
+    })
+    .await??;
+
+    Ok(())
 }
 
 async fn cleanup_keys(source: &PathBuf, target: &PathBuf) {

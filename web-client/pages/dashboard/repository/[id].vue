@@ -163,6 +163,7 @@ await fetchRepository(route.params.id as string);
     display: flex;
   }
 }
+
 .grid {
   width: 100%;
   display: grid;
