@@ -11,30 +11,36 @@
         >
       </div>
       <ControlsSpacer :height="40" />
+      <!-- -->
       <div :class="$style.columns">
         <ControlsInput v-model="gitSourceModel" :error="state.errors.gitSource"
           ><template #placeholder>git Source</template></ControlsInput
         >
-        <ControlsInput
-          v-model="gitSourceSecretKeyModel"
-          :error="state.errors.gitSourceSecretKey"
-          ><template #placeholder
-            >git Source Secret Key (optional)</template
-          ></ControlsInput
-        >
-
         <ControlsInput v-model="gitTargetModel" :error="state.errors.gitTarget"
           ><template #placeholder>git Target</template></ControlsInput
         >
-        <ControlsInput
+        <ControlsTextareaInput
+          v-model="gitSourceSecretKeyModel"
+          :rows="7"
+          :error="state.errors.gitSourceSecretKey"
+          ><template #placeholder
+            >git Source Secret Key (optional)</template
+          ></ControlsTextareaInput
+        >
+
+        <!-- -->
+
+        <ControlsTextareaInput
           v-model="gitTargetSecretKeyModel"
+          :rows="7"
           :error="state.errors.gitTargetSecretKey"
           ><template #placeholder
             >git Target Secret Key</template
-          ></ControlsInput
+          ></ControlsTextareaInput
         >
       </div>
       <ControlsSpacer :height="40" />
+      <!-- -->
       <div :class="$style.columns">
         <ControlsNumberInput
           v-model="cloningPeriodModel"
@@ -227,6 +233,25 @@ const validateFields = () => {
   if (state.form.gitTargetSecretKey.trim().length < 3) {
     state.errors.gitTargetSecretKey =
       "git Target Secret Key should be more than 3 characters long";
+  }
+
+  const gitTargetSecretKeyValidation = validateSSHPrivateKey(
+    state.form.gitTargetSecretKey,
+  );
+
+  const gitSourceSecretKeyValidation = validateSSHPrivateKey(
+    state.form.gitSourceSecretKey,
+  );
+
+  if (
+    state.form.gitSourceSecretKey?.trim().length !== 0 &&
+    !gitSourceSecretKeyValidation.result
+  ) {
+    state.errors.gitSourceSecretKey = gitSourceSecretKeyValidation.message;
+  }
+
+  if (!gitTargetSecretKeyValidation.result) {
+    state.errors.gitTargetSecretKey = gitTargetSecretKeyValidation.message;
   }
 
   const hasError = [
