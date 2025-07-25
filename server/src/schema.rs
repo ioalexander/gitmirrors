@@ -23,6 +23,19 @@ diesel::table! {
 }
 
 diesel::table! {
+    repository_logs (id) {
+        id -> Uuid,
+        repository_id -> Uuid,
+        #[sql_name = "type"]
+        #[max_length = 30]
+        type_ -> Varchar,
+        message -> Text,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
     user (id) {
         id -> Uuid,
         #[max_length = 32]
@@ -37,8 +50,10 @@ diesel::table! {
 }
 
 diesel::joinable!(repository -> user (user_id));
+diesel::joinable!(repository_logs -> repository (repository_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     repository,
+    repository_logs,
     user,
 );

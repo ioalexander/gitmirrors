@@ -15,12 +15,13 @@ use diesel::{
 };
 use tokio::fs;
 use tokio::io::AsyncWriteExt;
+use uuid::Uuid;
 
 use crate::schema::repository::dsl::*;
 use crate::utils::crypto::sanitize_ssh_key;
 use tokio::process::Command;
 
-use crate::models::RepositoryModel;
+use crate::models::{InsertableRepositoryLogModel, RepositoryModel};
 
 const CLONE_STORAGE_PATH: &str = "clone_storage/repositories/";
 const KEY_STORAGE_PATH: &str = "clone_storage/keys/";
@@ -52,7 +53,8 @@ pub async fn clone_worker_run(
     for repo in repositories_to_clone {
         let repo_id = repo.id;
 
-        // catch panics synchronously around the creation of the future
+        insert_log(pool, repo_id, "starting_clone_job", "Starting clone job...").await?;
+
         let future = catch_unwind(AssertUnwindSafe(|| {
             clone_worker_run_single_repo(pool, repo)
         }));
@@ -62,13 +64,24 @@ pub async fn clone_worker_run(
                 // now await the future and handle its error normally
                 if let Err(e) = fut.await {
                     eprintln!("Failed to clone repo {}: {:?}", repo_id, e);
+
+                    insert_log(pool, repo_id, "error_clone_job", "Cloning failed.").await?;
                 }
+
+                insert_log(
+                    pool,
+                    repo_id,
+                    "finished_clone_job",
+                    "Cloning finished succesfully!",
+                )
+                .await?;
             }
             Err(panic) => {
                 eprintln!(
                     "Panic occurred while creating clone future for repo {}: {:?}",
                     repo_id, panic
                 );
+                insert_log(pool, repo_id, "panic_clone_job", "Cloning job panic!").await?;
             }
         }
     }
@@ -283,4 +296,40 @@ async fn write_key_file(path: &PathBuf, key: &str) -> std::io::Result<()> {
 async fn cleanup_keys(source: &PathBuf, target: &PathBuf) {
     let _ = fs::remove_file(source).await;
     let _ = fs::remove_file(target).await;
+}
+
+pub async fn insert_log(
+    pool: &Pool<ConnectionManager<PgConnection>>,
+    repository_id: Uuid,
+    log_type: &str,
+    log_message: &str,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let log_type = log_type.to_owned();
+    let log_message = log_message.to_owned();
+    let pool = pool.clone();
+
+    let res = tokio::task::spawn_blocking(
+        move || -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+            let mut conn = pool
+                .get()
+                .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::new(e) })?;
+
+            let new_log = InsertableRepositoryLogModel {
+                repository_id,
+                type_: &log_type,
+                message: &log_message,
+            };
+
+            diesel::insert_into(crate::schema::repository_logs::table)
+                .values(&new_log)
+                .execute(&mut conn)
+                .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { Box::new(e) })?;
+
+            Ok(())
+        },
+    )
+    .await
+    .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
+
+    Ok(res)
 }

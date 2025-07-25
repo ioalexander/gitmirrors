@@ -8,7 +8,7 @@ use validator::Validate;
 
 use crate::db::DbConnection;
 use crate::middlewares::auth::AuthGuard;
-use crate::models::{InsertableRepositoryModel, RepositoryModel};
+use crate::models::{InsertableRepositoryModel, RepositoryLogModel, RepositoryModel};
 use crate::schema::repository;
 use crate::utils::response::ApiResponse;
 
@@ -16,6 +16,12 @@ use crate::utils::response::ApiResponse;
 #[serde(rename_all = "camelCase")]
 pub struct GetRepositoryResponse {
     pub repository: RepositoryModel,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetRepositoryLogsResponse {
+    pub repository_logs: Vec<RepositoryLogModel>,
 }
 
 #[derive(Serialize)]
@@ -122,6 +128,68 @@ pub fn get_repository_by_id(
         Err(_) => Custom(
             Status::InternalServerError,
             Json(ApiResponse::error("Failed to fetch repository")),
+        ),
+    }
+}
+
+#[get("/repository/<repo_id>/logs")]
+pub fn get_repository_logs_by_id(
+    db: &State<DbConnection>,
+    user: AuthGuard,
+    repo_id: String,
+) -> Custom<Json<ApiResponse<GetRepositoryLogsResponse>>> {
+    use crate::schema::repository::dsl::*;
+
+    let connection = &mut db.get().unwrap();
+
+    let parsed_id = match uuid::Uuid::parse_str(&repo_id) {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            return Custom(
+                Status::BadRequest,
+                Json(ApiResponse::error("Invalid repository ID")),
+            );
+        }
+    };
+
+    let repo = match repository
+        .filter(id.eq(parsed_id).and(user_id.eq(user.0.id)))
+        .first::<RepositoryModel>(connection)
+        .optional()
+    {
+        Ok(Some(r)) => r,
+        Ok(None) => {
+            return Custom(
+                Status::NotFound,
+                Json(ApiResponse::error("Repository not found")),
+            );
+        }
+        Err(_) => {
+            return Custom(
+                Status::InternalServerError,
+                Json(ApiResponse::error("Failed to fetch repository")),
+            );
+        }
+    };
+
+    let logs_result = crate::schema::repository_logs::table
+        .filter(crate::schema::repository_logs::repository_id.eq(repo.id))
+        .order(crate::schema::repository_logs::created_at.desc())
+        .load::<RepositoryLogModel>(connection);
+
+    match logs_result {
+        Ok(logs) => Custom(
+            Status::Ok,
+            Json(ApiResponse::success(
+                "Logs fetched successfully",
+                GetRepositoryLogsResponse {
+                    repository_logs: logs,
+                },
+            )),
+        ),
+        Err(_) => Custom(
+            Status::InternalServerError,
+            Json(ApiResponse::error("Failed to fetch logs")),
         ),
     }
 }

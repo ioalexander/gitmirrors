@@ -71,3 +71,28 @@ pub struct InsertableRepositoryModel<'a> {
     pub git_target_secret_key: Option<&'a str>,
     pub git_clone_period_seconds: i32,
 }
+
+#[derive(Debug, Queryable, Identifiable, Insertable, Serialize, Deserialize)]
+#[diesel(table_name = crate::schema::repository_logs)]
+#[diesel(belongs_to(RepositoryModel, foreign_key = repository_id))]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+#[serde(rename_all = "camelCase")]
+pub struct RepositoryLogModel {
+    pub id: Uuid,
+    pub repository_id: Uuid,
+
+    #[diesel(sql_type = Varchar)]
+    pub type_: String,
+
+    pub message: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = crate::schema::repository_logs)]
+pub struct InsertableRepositoryLogModel<'a> {
+    pub repository_id: Uuid,
+    pub type_: &'a str,
+    pub message: &'a str,
+}
