@@ -61,20 +61,19 @@ pub async fn clone_worker_run(
 
         match future {
             Ok(fut) => {
-                // now await the future and handle its error normally
                 if let Err(e) = fut.await {
                     eprintln!("Failed to clone repo {}: {:?}", repo_id, e);
 
                     insert_log(pool, repo_id, "error_clone_job", "Cloning failed.").await?;
+                } else {
+                    insert_log(
+                        pool,
+                        repo_id,
+                        "finished_clone_job",
+                        "Cloning finished succesfully!",
+                    )
+                    .await?;
                 }
-
-                insert_log(
-                    pool,
-                    repo_id,
-                    "finished_clone_job",
-                    "Cloning finished succesfully!",
-                )
-                .await?;
             }
             Err(panic) => {
                 eprintln!(

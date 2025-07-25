@@ -52,9 +52,6 @@ const formattedCreatedAt = computed(() => {
 <style lang="scss" module>
 .container {
   width: 100%;
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid var(--gray-900);
 
   .name {
     font-size: 20px;

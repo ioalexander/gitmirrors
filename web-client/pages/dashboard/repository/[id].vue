@@ -28,12 +28,14 @@
       :repository="repository"
       :clone-due="state.cloneDue"
     />
+    <RepositoryLogsTab :logs="repositoryLogs" />
   </div>
 </template>
 <script setup lang="ts">
 import { useToast } from "vue-toastification";
 import { useRepositoryStore } from "~/store/repository.store";
 import type { Repository } from "~/types/repository";
+import type { RepositoryLog } from "~/types/repositoryLog";
 
 const route = useRoute();
 const repositoryStore = useRepositoryStore();
@@ -45,14 +47,17 @@ const router = useRouter();
 
 let cloneDueUpdateIntervalId: number | undefined;
 let fetchRepositoryIntervalId: number | undefined;
+let fetchRepositoryLogsIntervalId: number | undefined;
 
 const state = reactive<{
   repository: Repository | undefined;
+  repositoryLogs: RepositoryLog[];
   cloneDue: number | undefined;
   cloneDueExpired: boolean;
   isDeleteConfirmModalOpen: boolean;
 }>({
   repository: undefined,
+  repositoryLogs: [],
   cloneDue: undefined,
   cloneDueExpired: false,
   isDeleteConfirmModalOpen: false,
@@ -64,6 +69,7 @@ const isDeleteConfirmModalOpenModel = computed({
 });
 
 const repository = computed(() => state.repository);
+const repositoryLogs = computed(() => state.repositoryLogs);
 
 const fetchRepository = async (id: string) => {
   try {
@@ -82,6 +88,40 @@ const fetchRepository = async (id: string) => {
     throw createError({
       statusCode: 500,
       statusMessage: `Failed to fetch repository. Error: ${e?.message}`,
+    });
+  }
+};
+
+const fetchRepositoryLogs = async (id: string) => {
+  console.log("caleld!");
+  try {
+    const res = await api.repository.getRepositoryLogs(id, {
+      serverSideCookiesRaw: rawCookies,
+    });
+
+    console.log(res);
+
+    if (!res.data.repositoryLogs) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "Repository logs not found",
+      });
+    }
+
+    state.repositoryLogs = res?.data?.repositoryLogs
+      ?.slice()
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 10);
+
+    console.log(state.repositoryLogs);
+  } catch (e: any) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: `Failed to fetch repository logs. Error: ${e?.message}`,
     });
   }
 };
@@ -113,9 +153,18 @@ const fetchRepositoryInterval = async () => {
   if (state.cloneDueExpired) {
     try {
       await fetchRepository(route.params.id as string);
-      toast.success("Repository data updated!");
     } catch {
       toast.error("Failed to fetch repository");
+    }
+  }
+};
+
+const fetchRepositoryLogsInterval = async () => {
+  if (state.cloneDueExpired) {
+    try {
+      await fetchRepositoryLogs(route.params.id as string);
+    } catch {
+      toast.error("Failed to fetch repository logs");
     }
   }
 };
@@ -139,15 +188,25 @@ const deleteRepository = async () => {
 onMounted(() => {
   updateCloneDue();
   cloneDueUpdateIntervalId = window.setInterval(updateCloneDue, 200);
-  fetchRepositoryIntervalId = window.setInterval(fetchRepositoryInterval, 1000);
+  fetchRepositoryIntervalId = window.setInterval(
+    fetchRepositoryInterval,
+    10000,
+  );
+  fetchRepositoryLogsIntervalId = window.setInterval(
+    fetchRepositoryLogsInterval,
+    2000,
+  );
 });
 
 onUnmounted(() => {
   if (cloneDueUpdateIntervalId) clearInterval(cloneDueUpdateIntervalId);
   if (fetchRepositoryIntervalId) clearInterval(fetchRepositoryIntervalId);
+  if (fetchRepositoryLogsIntervalId)
+    clearInterval(fetchRepositoryLogsIntervalId);
 });
 
 await fetchRepository(route.params.id as string);
+await fetchRepositoryLogs(route.params.id as string);
 </script>
 <style lang="scss" module>
 .topbarContent {

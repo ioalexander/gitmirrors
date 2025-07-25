@@ -2,6 +2,7 @@ import axios from "axios";
 import type { NuxtServerInitOptions } from "~/plugins/init.server";
 import type { IApiResponse } from "~/types/api";
 import type { Repository } from "~/types/repository";
+import type { RepositoryLog } from "~/types/repositoryLog";
 
 export const repositoryApi = (config: { baseUrl: string }) => {
   const axiosBase = axios.create({
@@ -28,6 +29,16 @@ export const repositoryApi = (config: { baseUrl: string }) => {
         headers: {
           Cookie: nuxtServerInitOptions?.serverSideCookiesRaw,
         },
+      });
+
+      return payload;
+    },
+    async getRepositoryLogs(
+      id: string,
+      nuxtServerInitOptions?: NuxtServerInitOptions,
+    ): Promise<IApiResponse<{ repositoryLogs: RepositoryLog[] }>> {
+      const { data: payload } = await axiosBase.get(`/${id}/logs`, {
+        headers: { Cookie: nuxtServerInitOptions?.serverSideCookiesRaw },
       });
 
       return payload;
