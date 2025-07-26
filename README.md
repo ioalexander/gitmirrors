@@ -42,10 +42,10 @@ Otherwise, the password will still be any.
 
 ## Roadmap
 
-[x] basic functionality - repositories are being cloned
-[ ] cleaning code base (e.g. linters, refactorings)
-[ ] docker image building pipelines
-[ ] pull repositories data
-[ ] advanced input validation
-[ ] users management
-[ ] mobile version (right now it's still usable, but I still want to fix sidebar)
+- [x] basic functionality - repositories are being cloned
+- [ ] cleaning code base (e.g. linters, refactorings)
+- [ ] docker image building pipelines
+- [ ] pull repositories data
+- [ ] advanced input validation
+- [ ] users management
+- [ ] mobile version (right now it's still usable, but I still want to fix sidebar)
