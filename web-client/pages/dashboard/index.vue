@@ -180,6 +180,7 @@ onMounted(async () => {
   .text {
     .title {
       font-size: 20px;
+      margin-bottom: 10px;
     }
     .row {
       color: var(--gray-600);
