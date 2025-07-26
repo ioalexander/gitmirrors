@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
+echo "entrypoint.sh started!"
+
+ls -la
+
+pwd
+
 echo "Running Diesel migrations..."
 
 echo "Waiting for PostgreSQL at $POSTGRES_HOST:$POSTGRES_PORT..."
