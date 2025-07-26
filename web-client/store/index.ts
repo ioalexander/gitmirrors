@@ -23,7 +23,11 @@ export const useStore = defineStore("root", {
         const healthUrl = baseUrl + "/health";
         await axios.get(healthUrl);
       } catch (e) {
-        console.error("Server unavailable", e);
+        console.error(
+          "Caught error on nuxtServerInit. Server unavailable. Error and config: ",
+          e,
+          config,
+        );
         throw createError({
           statusCode: 503,
           statusMessage: "Server unavailable",
