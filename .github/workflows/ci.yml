@@ -1,0 +1,63 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+jobs:
+  rust-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Rust
+        run: cargo clippy --manifest-path ./server/Cargo.toml -- -D warnings
+
+      - name: Build Docker image (server)
+        run: docker build -t $DOCKERHUB_USERNAME/rust-server:latest ./server
+
+      - name: Push Docker image (server)
+        run: |
+          echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin
+          docker push $DOCKERHUB_USERNAME/gitmirrors-backend:latest
+
+  web-client:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies and lint
+        run: |
+          cd ./web-client
+          yarn install --frozen-lockfile
+          yarn lint
+
+      - name: Build Docker image (web-client)
+        run: docker build -t $DOCKERHUB_USERNAME/web-client:latest ./web-client
+
+      - name: Push Docker image (web-client)
+        run: |
+          echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin
+          docker push $DOCKERHUB_USERNAME/gitmirrors-frontend:latest
+
+  create-release:
+    needs: [rust-server, web-client]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
