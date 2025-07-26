@@ -1,4 +1,4 @@
-import { useApi, type Api } from "~/composables/useApi";
+import type { Api } from "~/composables/useApi";
 import type { Repository } from "~/types/repository";
 
 interface State {
@@ -19,7 +19,12 @@ export const useRepositoryStore = defineStore("repository", {
         this.SET_REPOSITORIES(repositories);
 
         return { repositories };
-      } catch (e: any) {
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          console.error("get repositories error:", e.message);
+        } else {
+          console.error("get repositories error (unknown):", e);
+        }
         this.UNSET_REPOSITORIES();
       }
     },
@@ -34,8 +39,12 @@ export const useRepositoryStore = defineStore("repository", {
         this.repositories = [...this.repositories, createdRepository];
 
         return { createdRepository };
-      } catch (e: any) {
-        console.error(e);
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          console.error("add repository error:", e.message);
+        } else {
+          console.error("add repository error (unknown):", e);
+        }
       }
     },
     async deleteRepository(api: Api, id: string) {
@@ -48,8 +57,12 @@ export const useRepositoryStore = defineStore("repository", {
         );
 
         return { deletedRepository };
-      } catch (e: any) {
-        console.error(e);
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          console.error("delete repository error:", e.message);
+        } else {
+          console.error("delete repository error (unknown):", e);
+        }
       }
     },
     SET_REPOSITORIES(repositories: Repository[]) {

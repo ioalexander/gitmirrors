@@ -35,7 +35,6 @@ import { useUserStore } from "~/store/user.store";
 
 const api = useApi();
 const userStore = useUserStore();
-const router = useRouter();
 
 const state = reactive({
   form: {

@@ -28,7 +28,7 @@ const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(value);
       toast.success("Value copied to clipboard!");
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy value to clipboard!");
     }
   }

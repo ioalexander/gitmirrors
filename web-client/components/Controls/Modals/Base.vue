@@ -1,6 +1,6 @@
 <template>
   <Teleport to="#teleports">
-    <div :class="[$style.modal, { [$style.isOpen]: isOpen }]">
+    <div :class="[$style.modal, { [$style.isOpen]: props.isOpen }]">
       <div :class="$style.window">
         <slot />
       </div>

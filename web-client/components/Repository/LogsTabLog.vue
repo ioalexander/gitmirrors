@@ -23,7 +23,7 @@
         name="material-symbols:exclamation-rounded"
       />
 
-      <div :class="$style.line"></div>
+      <div :class="$style.line"/>
     </div>
     <div :class="$style.info">
       <div :class="$style.text">{{ props.log.message }}</div>

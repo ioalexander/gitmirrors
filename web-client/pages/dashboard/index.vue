@@ -1,32 +1,34 @@
 <template>
-  <Topbar>
-    <div :class="$style.topbarContent">
-      <h1 :class="$style.title">Dashboard</h1>
+  <div>
+    <Topbar>
+      <div :class="$style.topbarContent">
+        <h1 :class="$style.title">Dashboard</h1>
+      </div>
+    </Topbar>
+    <div :class="$style.container">
+      <transition-group name="fade" tag="div" :class="$style.list">
+        <ControlsPanel :class="$style.repositoriesDoughnut">
+          <div :class="$style.text">
+            <h2 :class="$style.title">Hello, {{ user?.username }}</h2>
+            <p :class="$style.row">
+              Total repositories: {{ state.dashboard?.totalRepositories }}
+            </p>
+            <p :class="$style.row">
+              Enabled/Disabled: {{ state.dashboard?.enabled }} /
+              {{ state.dashboard?.disabled }}
+            </p>
+          </div>
+          <Doughnut :data="repositoriesDoughnutData" :class="$style.doughnut" />
+        </ControlsPanel>
+        <ControlsPanel :class="$style.logsChart">
+          <Bar
+            :data="logsBarChartData"
+            :class="$style.chart"
+            :options="{ responsive: true }"
+          />
+        </ControlsPanel>
+      </transition-group>
     </div>
-  </Topbar>
-  <div :class="$style.container">
-    <transition-group name="fade" tag="div" :class="$style.list">
-      <ControlsPanel :class="$style.repositoriesDoughnut">
-        <div :class="$style.text">
-          <h2 :class="$style.title">Hello, {{ user?.username }}</h2>
-          <p :class="$style.row">
-            Total repositories: {{ state.dashboard?.totalRepositories }}
-          </p>
-          <p :class="$style.row">
-            Enabled/Disabled: {{ state.dashboard?.enabled }} /
-            {{ state.dashboard?.disabled }}
-          </p>
-        </div>
-        <Doughnut :data="repositoriesDoughnutData" :class="$style.doughnut" />
-      </ControlsPanel>
-      <ControlsPanel :class="$style.logsChart">
-        <Bar
-          :data="logsBarChartData"
-          :class="$style.chart"
-          :options="{ responsive: true }"
-        />
-      </ControlsPanel>
-    </transition-group>
   </div>
 </template>
 
@@ -34,7 +36,7 @@
 import { computed, onMounted, reactive } from "vue";
 import { useToast } from "vue-toastification";
 import { useUserStore } from "~/store/user.store";
-import type { DashboardData, DailyLogCount } from "~/types/dashboard";
+import type { DashboardData } from "~/types/dashboard";
 import { Doughnut, Bar } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -111,24 +113,6 @@ const logsBarChartData = computed(() => {
     ],
   };
 });
-
-const logsBarChartOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    y: {
-      beginAtZero: true,
-      ticks: {
-        stepSize: 1,
-      },
-    },
-  },
-  plugins: {
-    legend: {
-      position: "top",
-    },
-  },
-};
 
 onMounted(async () => {
   try {

@@ -1,6 +1,6 @@
 <template>
   <div :style="{ height: height / 2 + 'px' }" />
-  <div :class="$style.line"></div>
+  <div :class="$style.line"/>
   <div :style="{ height: height / 2 + 'px' }" />
 </template>
 

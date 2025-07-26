@@ -9,9 +9,9 @@
 <script setup lang="ts">
 import type { NuxtError } from "#app";
 
-const props = defineProps({
-  error: Object as () => NuxtError,
-});
+const props = defineProps<{
+  error?: NuxtError;
+}>();
 
 onMounted(() => {
   console.error("ERROR", props?.error);

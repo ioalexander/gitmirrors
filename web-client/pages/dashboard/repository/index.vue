@@ -1,16 +1,22 @@
 <template>
-  <Topbar>
-    <div :class="$style.topbarContent">
-      <h1 :class="$style.title">Repositories</h1>
+  <div>
+    <Topbar>
+      <div :class="$style.topbarContent">
+        <h1 :class="$style.title">Repositories</h1>
+      </div>
+    </Topbar>
+    <div :class="$style.container">
+      <RepositoryListContainer>
+        <RepositoryListAddNew @click="state.isAddNewPopupOpen = true" />
+        <RepositoryListItem
+          v-for="item in repositories"
+          :key="item.id"
+          :repository="item"
+        />
+      </RepositoryListContainer>
     </div>
-  </Topbar>
-  <div :class="$style.container">
-    <RepositoryListContainer>
-      <RepositoryListAddNew @click="state.isAddNewPopupOpen = true" />
-      <RepositoryListItem v-for="item in repositories" :repository="item" />
-    </RepositoryListContainer>
+    <RepositoryAddNewPopup v-model="isAddNewPopupOpen" />
   </div>
-  <RepositoryAddNewPopup v-model="isAddNewPopupOpen" />
 </template>
 <script setup lang="ts">
 import { useToast } from "vue-toastification";

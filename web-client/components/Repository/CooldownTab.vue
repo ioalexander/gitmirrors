@@ -18,7 +18,7 @@
               ((props?.cloneDue as number) <= 0 ? 1 : clockPieProgress)
             "
             transform="rotate(-90 50 50)"
-          ></circle>
+          />
         </svg>
       </div>
     </div>

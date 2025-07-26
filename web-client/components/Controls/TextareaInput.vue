@@ -18,7 +18,7 @@
         @blur="handleBlur"
         @input="handleInput"
         @keyup.enter="handleEnter"
-      ></textarea>
+      />
     </div>
     <div v-if="isError" :class="$style.error">{{ props.error }}</div>
   </div>
@@ -32,6 +32,7 @@ const emit = defineEmits(["focus", "blur", "enter"]);
 const props = defineProps({
   name: {
     type: String,
+    default: "",
   },
   type: {
     type: String,
@@ -39,9 +40,11 @@ const props = defineProps({
   },
   autocomplete: {
     type: String,
+    default: "",
   },
   error: {
     type: String,
+    default: "",
   },
   readonly: {
     type: Boolean,
@@ -86,8 +89,9 @@ const handleBlur = () => {
   emit("blur");
 };
 
-const handleInput = (e: any) => {
-  model.value = e.target?.value;
+const handleInput = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  model.value = target.value;
 
   state.isFilled = inputRef?.value?.value?.length !== 0;
   state.isPlaceholderHidden = state.isFilled;

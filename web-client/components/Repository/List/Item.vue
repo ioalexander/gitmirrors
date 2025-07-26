@@ -24,7 +24,6 @@
   </ControlsPanel>
 </template>
 <script setup lang="ts">
-import Button from "~/components/Controls/Button.vue";
 import type { Repository } from "~/types/repository";
 
 const props = defineProps<{

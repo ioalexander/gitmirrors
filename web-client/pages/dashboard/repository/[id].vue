@@ -1,34 +1,36 @@
 <template>
-  <Topbar>
-    <div :class="$style.topbarContent">
-      <h1 :class="$style.title">{{ repository?.name }}</h1>
-      <div :class="$style.right">
-        <ControlsButton is-red @click="state.isDeleteConfirmModalOpen = true"
-          >Delete</ControlsButton
-        >
+  <div>
+    <Topbar>
+      <div :class="$style.topbarContent">
+        <h1 :class="$style.title">{{ repository?.name }}</h1>
+        <div :class="$style.right">
+          <ControlsButton is-red @click="state.isDeleteConfirmModalOpen = true"
+            >Delete</ControlsButton
+          >
+        </div>
       </div>
-    </div>
-  </Topbar>
-  <ControlsModalsConfirm
-    v-model="isDeleteConfirmModalOpenModel"
-    is-red
-    @cancel="state.isDeleteConfirmModalOpen = false"
-    @confirm="deleteRepository"
-  >
-    <template #title>Delete "{{ repository?.name }}"?</template>
-    <template #content
-      >Are you sure you want to delete repository "{{ repository?.name }}"?
-      <br />
-      You can't undo this.</template
+    </Topbar>
+    <ControlsModalsConfirm
+      v-model="isDeleteConfirmModalOpenModel"
+      is-red
+      @cancel="state.isDeleteConfirmModalOpen = false"
+      @confirm="deleteRepository"
     >
-  </ControlsModalsConfirm>
-  <div :class="$style.grid">
-    <RepositoryInfoTab :repository="repository" />
-    <RepositoryCooldownTab
-      :repository="repository"
-      :clone-due="state.cloneDue"
-    />
-    <RepositoryLogsTab :logs="repositoryLogs" />
+      <template #title>Delete "{{ repository?.name }}"?</template>
+      <template #content
+        >Are you sure you want to delete repository "{{ repository?.name }}"?
+        <br >
+        You can't undo this.</template
+      >
+    </ControlsModalsConfirm>
+    <div :class="$style.grid">
+      <RepositoryInfoTab :repository="repository" />
+      <RepositoryCooldownTab
+        :repository="repository"
+        :clone-due="state.cloneDue"
+      />
+      <RepositoryLogsTab :logs="repositoryLogs" />
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -84,22 +86,20 @@ const fetchRepository = async (id: string) => {
         statusMessage: "Repository not found",
       });
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
     throw createError({
       statusCode: 500,
-      statusMessage: `Failed to fetch repository. Error: ${e?.message}`,
+      statusMessage: `Failed to fetch repository. Error: ${message}`,
     });
   }
 };
 
 const fetchRepositoryLogs = async (id: string) => {
-  console.log("caleld!");
   try {
     const res = await api.repository.getRepositoryLogs(id, {
       serverSideCookiesRaw: rawCookies,
     });
-
-    console.log(res);
 
     if (!res.data.repositoryLogs) {
       throw createError({
@@ -116,12 +116,12 @@ const fetchRepositoryLogs = async (id: string) => {
         return dateB - dateA;
       })
       .slice(0, 10);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
 
-    console.log(state.repositoryLogs);
-  } catch (e: any) {
     throw createError({
       statusCode: 500,
-      statusMessage: `Failed to fetch repository logs. Error: ${e?.message}`,
+      statusMessage: `Failed to fetch repository logs. Error: ${message}`,
     });
   }
 };

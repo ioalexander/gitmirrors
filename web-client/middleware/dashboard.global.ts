@@ -1,6 +1,6 @@
 import { useUserStore } from "~/store/user.store";
 
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware((to) => {
   if (!to.path.startsWith("/dashboard")) return;
 
   const userStore = useUserStore();

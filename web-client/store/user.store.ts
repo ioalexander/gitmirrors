@@ -26,8 +26,12 @@ export const useUserStore = defineStore("user", {
 
       try {
         await api.user.logout();
-      } catch (e: any) {
-        console.error("Failed to perform logout. Error: ", e);
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          console.error("Failed to perform logout. Error:", e.message);
+        } else {
+          console.error("Failed to perform logout. Unknown error:", e);
+        }
         this.UNSET_USER();
       }
 
@@ -57,8 +61,12 @@ export const useUserStore = defineStore("user", {
         });
 
         return { user };
-      } catch (e: any) {
-        console.log("get user error: ", e);
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          console.error("get user error:", e.message);
+        } else {
+          console.error("get user error (unknown):", e);
+        }
         this.UNSET_USER();
       }
     },

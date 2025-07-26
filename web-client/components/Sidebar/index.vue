@@ -5,7 +5,7 @@
         src="/images/logo_150px.webp"
         alt="gitmirrors logo webp"
         width="150"
-      />
+      >
       <button :class="$style.foldSidebar" @click="toggleSidebarFold">
         <Icon v-if="isSidebarFold" name="ci:hamburger-lg" />
         <Icon v-else name="material-symbols:arrow-back-ios" />
@@ -15,6 +15,7 @@
       <div :class="$style.linkslist">
         <NuxtLink
           v-for="url in dashboardUrls"
+          :key="url.url"
           :class="[
             {
               [$style.link]: true,
@@ -27,8 +28,8 @@
           <span :class="$style.title">
             {{ url.title }}
           </span>
-          <div :class="$style.marker"></div
-        ></NuxtLink>
+          <div :class="$style.marker"
+        /></NuxtLink>
       </div>
       <div :class="$style.bottomlinks">
         <NuxtLink to="/dashboard/account" :class="$style.account">

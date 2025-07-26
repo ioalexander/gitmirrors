@@ -1,4 +1,6 @@
-<template></template>
+<template>
+  <div>Redirecting...</div>
+</template>
 
 <script setup lang="ts">
 import { useUserStore } from "~/store/user.store";

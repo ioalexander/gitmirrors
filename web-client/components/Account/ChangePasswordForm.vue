@@ -32,9 +32,9 @@
 <script setup lang="ts">
 import Input from "../Controls/Input.vue";
 import Button from "../Controls/Button.vue";
+import { isAxiosError } from "axios";
 
 const api = useApi();
-const router = useRouter();
 
 const state = reactive({
   form: {
@@ -97,18 +97,29 @@ const onSubmit = async () => {
     if (response.success !== true) {
       throw new Error("Malformed Response");
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.log("Error happened", e);
-    state.errors.submit = `Error: ${e?.message}`;
 
-    if (e?.status === 400 || e?.status === 401 || e?.status === 404) {
-      state.errors.submit = `Username or password is invalid`;
-    } else {
-      if (e?.status < 500) {
-        state.errors.submit = `Error: ${e?.response?.data?.message}`;
-      } else {
-        state.errors.submit = `Error: server unavailable. Try again later.`;
+    let status: number | undefined;
+    let message = "Unknown error";
+
+    if (e instanceof Error) {
+      message = e.message;
+
+      if (isAxiosError(e)) {
+        status = e.response?.status;
+        message = e.response?.data?.message ?? message;
       }
+    }
+
+    if (status === 400 || status === 401 || status === 404) {
+      state.errors.submit = `Username or password is invalid`;
+    } else if (status !== undefined && status < 500) {
+      state.errors.submit = `Error: ${message}`;
+    } else if (status !== undefined) {
+      state.errors.submit = `Error: server unavailable. Try again later.`;
+    } else {
+      state.errors.submit = `Error: ${message}`;
     }
   } finally {
     state.isSubmittingForm = false;

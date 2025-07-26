@@ -185,8 +185,9 @@ const onSubmit = async () => {
     }
 
     await router.push(`/dashboard/repository/${res?.createdRepository.id}`);
-  } catch (e: any) {
-    toast.error(`Failed to create Repository. Message: ${e?.message}`);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    toast.error(`Failed to create Repository. Message: ${message}`);
   } finally {
     state.isSubmittingForm = false;
   }

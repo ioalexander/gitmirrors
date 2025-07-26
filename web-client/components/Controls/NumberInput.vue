@@ -17,7 +17,7 @@
         @blur="handleBlur"
         @input="handleInput"
         @keyup.enter="handleEnter"
-      />
+      >
     </div>
     <div v-if="isError" :class="$style.error">{{ props.error }}</div>
   </div>
@@ -31,12 +31,15 @@ const emit = defineEmits(["focus", "blur", "enter"]);
 const props = defineProps({
   name: {
     type: String,
+    default: "",
   },
   autocomplete: {
     type: String,
+    default: "",
   },
   error: {
     type: String,
+    default: "",
   },
   readonly: {
     type: Boolean,
@@ -44,15 +47,19 @@ const props = defineProps({
   },
   min: {
     type: Number,
+    default: 0,
   },
   max: {
     type: Number,
+    default: 999999,
   },
   step: {
     type: Number,
+    default: 1,
   },
   defaultValue: {
     type: Number,
+    default: 0,
   },
 });
 
@@ -88,8 +95,10 @@ const handleBlur = () => {
   emit("blur");
 };
 
-const handleInput = (e: any) => {
-  let val = Number(e.target?.value);
+const handleInput = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  let val = Number(target.value);
+
   if (isNaN(val)) {
     model.value = 0;
     state.isFilled = false;
@@ -97,18 +106,16 @@ const handleInput = (e: any) => {
     return;
   }
 
-  // Clamp to min/max if provided
   if (props.min !== undefined && val < props.min) val = props.min;
   if (props.max !== undefined && val > props.max) val = props.max;
 
-  // Round to nearest step if provided
   if (props.step !== undefined && props.step > 0) {
     val = Math.round(val / props.step) * props.step;
   }
 
   model.value = val;
 
-  state.isFilled = inputRef?.value?.value?.length !== 0;
+  state.isFilled = target.value.length !== 0;
   state.isPlaceholderHidden = state.isFilled;
 };
 
