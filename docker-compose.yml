@@ -11,6 +11,7 @@ services:
       SERVER_PORT: ${SERVER_PORT}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
+      ROCKET_ADDRESS: ${ROCKET_ADDRESS}
       ROCKET_ENV: ${ROCKET_ENV}
       DATABASE_URL: ${DATABASE_URL}
 
@@ -21,6 +22,7 @@ services:
     networks:
       - gitmirrors
     environment:
+      PORT: ${WEB_CLIENT_PORT}
       NUXT_PUBLIC_API_URL: ${NUXT_PUBLIC_API_URL}
       NUXT_PUBLIC_SERVER_API_URL: ${NUXT_PUBLIC_SERVER_API_URL}
 
@@ -29,7 +31,7 @@ services:
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - ./pg_data:/var/lib/postgresql/data
     networks:
       - gitmirrors
     environment:
@@ -37,10 +39,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD}
-
 networks:
   gitmirrors:
     driver: bridge
-
-volumes:
-  pg_data:

@@ -26,7 +26,6 @@ export const useStore = defineStore("root", {
         console.error(
           "Caught error on nuxtServerInit. Server unavailable. Error and config: ",
           e,
-          config,
         );
         throw createError({
           statusCode: 503,

@@ -6,6 +6,10 @@ export default defineNuxtConfig({
     logLevel: "debug",
   },
 
+  vite: {
+    ssr: { noExternal: ["vue-toastification"] },
+  },
+
   css: ["assets/scss/main.scss"],
 
   runtimeConfig: {
