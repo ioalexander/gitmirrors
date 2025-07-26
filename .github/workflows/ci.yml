@@ -14,6 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.86.0
+          override: true
+
       - name: Show versions
         run: rustc --version && cargo clippy --version
 
@@ -21,7 +28,7 @@ jobs:
         run: cargo clippy --manifest-path ./server/Cargo.toml -- -D warnings
 
       - name: Build Docker image (server)
-        run: docker build -t $DOCKERHUB_USERNAME/rust-server:latest ./server
+        run: docker build --progress=plain -t $DOCKERHUB_USERNAME/gitmirrors-backend:latest ./server
 
       - name: Push Docker image (server)
         run: |
@@ -45,7 +52,7 @@ jobs:
           yarn lint
 
       - name: Build Docker image (web-client)
-        run: docker build -t $DOCKERHUB_USERNAME/web-client:latest ./web-client
+        run: docker build --progress=plain -t $DOCKERHUB_USERNAME/gitmirrors-frontend:latest ./web-client
 
       - name: Push Docker image (web-client)
         run: |

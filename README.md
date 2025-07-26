@@ -20,6 +20,8 @@ docker-compose up --build
 
 ## Develop GitMirrors
 
+Use rust `toolchain: 1.86.0`
+
 ```
 git clone
 ```
