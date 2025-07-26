@@ -5,9 +5,7 @@ export const useApi = () => {
   const nuxtApp = useNuxtApp();
   const isServer = !!nuxtApp.ssrContext;
 
-  const baseUrl = isServer
-    ? config.public.serverApiBase
-    : config.public.apiBase;
+  const baseUrl = isServer ? config.public.serverApiUrl : config.public.apiUrl;
 
   return createApiClient({ baseUrl });
 };

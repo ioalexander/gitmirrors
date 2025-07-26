@@ -13,12 +13,12 @@ export const useStore = defineStore("root", {
       const isServer = !!nuxtApp.ssrContext;
 
       const config = useRuntimeConfig();
-      const api = createApiClient({ baseUrl: config.public.serverApiBase });
+      const api = createApiClient({ baseUrl: config.public.serverApiUrl });
 
       try {
         const baseUrl = isServer
-          ? config.public.serverApiBase
-          : config.public.apiBase;
+          ? config.public.serverApiUrl
+          : config.public.apiUrl;
 
         const healthUrl = baseUrl + "/health";
         await axios.get(healthUrl);
