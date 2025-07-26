@@ -1,4 +1,4 @@
-use chrono::{Duration, Utc};
+use chrono::{Duration, NaiveDate, Utc};
 use diesel::prelude::*;
 use rocket::State;
 use rocket::http::Status;
@@ -13,12 +13,27 @@ use crate::schema::repository;
 use crate::utils::response::ApiResponse;
 use diesel::deserialize::QueryableByName;
 use diesel::sql_query;
-use diesel::sql_types::{BigInt, Timestamptz};
+use diesel::sql_types::{BigInt, Date, Timestamptz, Uuid as SqlUuid};
 
 #[derive(QueryableByName)]
 struct CountResult {
     #[sql_type = "BigInt"]
     count: i64,
+}
+
+#[derive(QueryableByName)]
+struct DayCountResult {
+    #[sql_type = "Date"]
+    day: NaiveDate,
+    #[sql_type = "BigInt"]
+    count: i64,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DailyLogCount {
+    pub day: NaiveDate,
+    pub count: i64,
 }
 
 #[derive(Serialize)]
@@ -27,13 +42,9 @@ pub struct DashboardData {
     pub total_repositories: i64,
     pub enabled: i64,
     pub disabled: i64,
-    pub clone_frequency_past_day: i64,
-    pub clone_frequency_past_week: i64,
-    pub logs_frequency_past_day: i64,
-    pub logs_frequency_past_week: i64,
-    pub failed_clone_job_frequency_past_day: i64,
-    pub failed_clone_job_frequency_past_week: i64,
     pub last_cloned_repos: Vec<RepositoryModel>,
+    pub daily_logs: Vec<DailyLogCount>,
+    pub daily_error_logs: Vec<DailyLogCount>,
 }
 
 #[derive(Serialize)]
@@ -49,7 +60,6 @@ pub fn get_dashboard_data(
 ) -> Custom<Json<ApiResponse<GetDashboardDataResponse>>> {
     let conn = &mut db.get().unwrap();
     let now = Utc::now();
-    let day_ago = now - Duration::days(1);
     let week_ago = now - Duration::days(7);
 
     // Counts for repositories
@@ -68,48 +78,7 @@ pub fn get_dashboard_data(
 
     let disabled = total_repositories - enabled;
 
-    // Helper function to count logs by filter and time range
-    fn count_logs(
-        conn: &mut PgConnection,
-        user_id: uuid::Uuid,
-        log_type: Option<&str>,
-        since: chrono::DateTime<Utc>,
-    ) -> i64 {
-        let filter = if let Some(t) = log_type {
-            format!("AND l.type_ = '{}'", t)
-        } else {
-            "".to_string()
-        };
-
-        let query = format!(
-            "SELECT count(*) as count FROM repository_logs l \
-             JOIN repository r ON r.id = l.repository_id \
-             WHERE r.user_id = $1 AND l.created_at >= $2 {}",
-            filter
-        );
-
-        sql_query(query)
-            .bind::<diesel::sql_types::Uuid, _>(user_id)
-            .bind::<Timestamptz, _>(since)
-            .load::<CountResult>(conn)
-            .ok()
-            .and_then(|mut rows| rows.pop())
-            .map(|row| row.count)
-            .unwrap_or(0)
-    }
-
-    let clone_frequency_past_day = count_logs(conn, user.0.id, Some("finished_clone_job"), day_ago);
-    let clone_frequency_past_week =
-        count_logs(conn, user.0.id, Some("finished_clone_job"), week_ago);
-
-    let logs_frequency_past_day = count_logs(conn, user.0.id, None, day_ago);
-    let logs_frequency_past_week = count_logs(conn, user.0.id, None, week_ago);
-
-    let failed_clone_job_frequency_past_day =
-        count_logs(conn, user.0.id, Some("failed_clone_job"), day_ago);
-    let failed_clone_job_frequency_past_week =
-        count_logs(conn, user.0.id, Some("failed_clone_job"), week_ago);
-
+    // Fetch last cloned repositories
     let last_cloned_repos = repository::dsl::repository
         .filter(repository::dsl::user_id.eq(user.0.id))
         .filter(repository::dsl::last_clone_at.is_not_null())
@@ -118,17 +87,67 @@ pub fn get_dashboard_data(
         .load::<RepositoryModel>(conn)
         .unwrap_or_default();
 
+    // Chart data: daily log counts for past 7 days (all logs)
+    let logs_query = "\
+        SELECT date(l.created_at) as day, count(*) as count \
+        FROM repository_logs l \
+        JOIN repository r ON r.id = l.repository_id \
+        WHERE r.user_id = $1 AND l.created_at >= $2 \
+        GROUP BY day ORDER BY day";
+
+    let raw_daily_logs: Vec<DayCountResult> = sql_query(logs_query)
+        .bind::<SqlUuid, _>(user.0.id)
+        .bind::<Timestamptz, _>(week_ago)
+        .load(conn)
+        .unwrap_or_else(|_| vec![]);
+
+    // Chart data: daily error log counts for past 7 days (type = 'error_clone_job')
+    let errors_query = "\
+        SELECT date(l.created_at) as day, count(*) as count \
+        FROM repository_logs l \
+        JOIN repository r ON r.id = l.repository_id \
+        WHERE r.user_id = $1 AND l.created_at >= $2 AND l.type = 'error_clone_job' \
+        GROUP BY day ORDER BY day";
+
+    let raw_daily_errors: Vec<DayCountResult> = sql_query(errors_query)
+        .bind::<SqlUuid, _>(user.0.id)
+        .bind::<Timestamptz, _>(week_ago)
+        .load(conn)
+        .unwrap_or_else(|_| vec![]);
+
+    // Ensure 7 days even if zero counts for logs
+    let mut daily_logs = Vec::new();
+    for i in 0..7 {
+        let date = (now - Duration::days(i)).date_naive();
+        let count = raw_daily_logs
+            .iter()
+            .find(|r| r.day == date)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        daily_logs.push(DailyLogCount { day: date, count });
+    }
+    daily_logs.reverse();
+
+    // Ensure 7 days even if zero counts for errors
+    let mut daily_error_logs = Vec::new();
+    for i in 0..7 {
+        let date = (now - Duration::days(i)).date_naive();
+        let count = raw_daily_errors
+            .iter()
+            .find(|r| r.day == date)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        daily_error_logs.push(DailyLogCount { day: date, count });
+    }
+    daily_error_logs.reverse();
+
     let data = DashboardData {
         total_repositories,
         enabled,
         disabled,
-        clone_frequency_past_day,
-        clone_frequency_past_week,
-        logs_frequency_past_day,
-        logs_frequency_past_week,
-        failed_clone_job_frequency_past_day,
-        failed_clone_job_frequency_past_week,
         last_cloned_repos,
+        daily_logs,
+        daily_error_logs,
     };
 
     Custom(

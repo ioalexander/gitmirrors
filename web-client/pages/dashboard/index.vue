@@ -19,16 +19,41 @@
         </div>
         <Doughnut :data="repositoriesDoughnutData" :class="$style.doughnut" />
       </ControlsPanel>
+      <ControlsPanel :class="$style.logsChart">
+        <Bar
+          :data="logsBarChartData"
+          :class="$style.chart"
+          :options="{ responsive: true }"
+        />
+      </ControlsPanel>
     </transition-group>
   </div>
 </template>
+
 <script setup lang="ts">
+import { computed, onMounted, reactive } from "vue";
 import { useToast } from "vue-toastification";
 import { useUserStore } from "~/store/user.store";
-import type { DashboardData } from "~/types/dashboard";
-import { Doughnut } from "vue-chartjs";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-ChartJS.register(ArcElement, Tooltip, Legend);
+import type { DashboardData, DailyLogCount } from "~/types/dashboard";
+import { Doughnut, Bar } from "vue-chartjs";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+} from "chart.js";
+
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+);
 
 const userStore = useUserStore();
 const user = computed(() => userStore.user);
@@ -43,16 +68,67 @@ const repositoriesDoughnutData = computed(() => {
   return {
     datasets: [
       {
-        backgroundColor: ["#2090AA", "#202020"],
-        data: [
-          state.dashboard?.enabled as number,
-          state.dashboard?.disabled as number,
-        ],
+        backgroundColor: [accentColor.value, "#606060"],
+        data: [state.dashboard?.enabled ?? 0, state.dashboard?.disabled ?? 0],
         borderWidth: 0,
       },
     ],
   };
 });
+
+const accentColor = computed(
+  () =>
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent-color-blue")
+      .trim() || "#2090AA",
+);
+
+const errorColor = computed(
+  () =>
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--status-color-error")
+      .trim() || "#AA0000",
+);
+
+// Prepare bar chart data for daily logs and errors
+const logsBarChartData = computed(() => {
+  if (!state.dashboard) return { labels: [], datasets: [] };
+
+  const labels = state.dashboard.dailyLogs.map((d) => d.day);
+  return {
+    labels,
+    datasets: [
+      {
+        label: "Logs",
+        backgroundColor: accentColor?.value,
+        data: state.dashboard.dailyLogs.map((d) => d.count),
+      },
+      {
+        label: "Error Logs",
+        backgroundColor: errorColor?.value,
+        data: state.dashboard.dailyErrorLogs.map((d) => d.count),
+      },
+    ],
+  };
+});
+
+const logsBarChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        stepSize: 1,
+      },
+    },
+  },
+  plugins: {
+    legend: {
+      position: "top",
+    },
+  },
+};
 
 onMounted(async () => {
   try {
@@ -64,12 +140,17 @@ onMounted(async () => {
   }
 });
 </script>
+
 <style lang="scss" module>
 .container {
   width: 100%;
   height: 100%;
-  display: grid;
-  grid-template-columns: 1fr 2fr;
+
+  .list {
+    display: grid;
+    grid-template-columns: 450px 2fr;
+    grid-gap: 20px;
+  }
 }
 
 .topbarContent {
@@ -108,7 +189,13 @@ onMounted(async () => {
   }
 }
 
-.container > * {
+.logsChart {
+  .chart {
+    width: 100% !important;
+  }
+}
+
+.list > * {
   opacity: 0;
   transform: translateY(10px);
   animation: fadeInUp 0.5s forwards;
@@ -119,7 +206,7 @@ $list-delay-step: 0.05s;
 $list-delay-start: 0s;
 
 @for $i from 1 through $list-max {
-  .container > *:nth-child(#{$i}) {
+  .list > *:nth-child(#{$i}) {
     animation-delay: calc(
       #{$list-delay-start} + (#{$i} - 1) * #{$list-delay-step}
     );
@@ -130,6 +217,14 @@ $list-delay-start: 0s;
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media all and (max-width: 1300px) {
+  .container {
+    .list {
+      grid-template-columns: 1fr;
+    }
   }
 }
 </style>
