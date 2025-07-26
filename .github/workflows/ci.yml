@@ -21,6 +21,9 @@ jobs:
           toolchain: 1.86.0
           override: true
 
+      - name: Install Clippy
+        run: rustup component add clippy
+
       - name: Show versions
         run: rustc --version && cargo clippy --version
 
