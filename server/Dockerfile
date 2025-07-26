@@ -1,4 +1,4 @@
-FROM rust:1.87-slim as builder
+FROM rust:1.87-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   pkg-config libssl-dev libpq-dev ca-certificates postgresql-client curl git \
@@ -16,7 +16,7 @@ RUN cargo build --release
 FROM rust:1.87-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  build-essentials bash libssl-dev libpq-dev postgresql-client git openssh-client curl ca-certificates \
+  build-essential bash libssl-dev libpq-dev postgresql-client git openssh-client curl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 RUN cargo install diesel_cli --no-default-features --features postgres
