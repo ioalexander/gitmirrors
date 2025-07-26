@@ -16,7 +16,7 @@ RUN cargo build --release
 FROM rust:1.87-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  bash libssl3 postgresql-client git openssh-client curl libpq5 ca-certificates \
+  build-essentials bash libssl-dev libpq-dev postgresql-client git openssh-client curl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 RUN cargo install diesel_cli --no-default-features --features postgres
@@ -24,7 +24,6 @@ RUN cargo install diesel_cli --no-default-features --features postgres
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/target/release/server /usr/src/app/server
 COPY entrypoint.sh /usr/src/app/entrypoint.sh
-
 RUN chmod +x /usr/src/app/entrypoint.sh
 
 ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
