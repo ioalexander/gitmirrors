@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Show versions
+        run: rustc --version && cargo clippy --version
+
       - name: Lint Rust
         run: cargo clippy --manifest-path ./server/Cargo.toml -- -D warnings
 
