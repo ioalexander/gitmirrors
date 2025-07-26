@@ -1,3 +1,4 @@
+pub mod aggregate;
 pub mod repository;
 pub mod user;
 
@@ -11,6 +12,7 @@ pub fn routes() -> Vec<Route> {
         repository::add_repository,
         repository::get_repository_by_id,
         repository::delete_repository_by_id,
-        repository::get_repository_logs_by_id
+        repository::get_repository_logs_by_id,
+        aggregate::get_dashboard_data
     ]
 }
