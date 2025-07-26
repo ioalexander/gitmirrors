@@ -78,19 +78,29 @@ const repositoriesDoughnutData = computed(() => {
   };
 });
 
-const accentColor = computed(
-  () =>
+const accentColor = computed(() => {
+  if (typeof window === "undefined") {
+    return "#2090AA";
+  }
+
+  return (
     getComputedStyle(document.documentElement)
       .getPropertyValue("--accent-color-blue")
-      .trim() || "#2090AA",
-);
+      .trim() || "#2090AA"
+  );
+});
 
-const errorColor = computed(
-  () =>
+const errorColor = computed(() => {
+  if (typeof window === "undefined") {
+    return "#AA0000";
+  }
+
+  return (
     getComputedStyle(document.documentElement)
       .getPropertyValue("--status-color-error")
-      .trim() || "#AA0000",
-);
+      .trim() || "#AA0000"
+  );
+});
 
 // Prepare bar chart data for daily logs and errors
 const logsBarChartData = computed(() => {

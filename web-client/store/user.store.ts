@@ -39,9 +39,7 @@ export const useUserStore = defineStore("user", {
     },
     async getMe(api: Api, nuxtServerInitOptions?: NuxtServerInitOptions) {
       try {
-        console.log("getting user...");
         const meResponse = await api.user.getMe(nuxtServerInitOptions);
-        console.log("got user: ", meResponse);
 
         if (meResponse?.message === "Unauthorized") {
           throw new Error("User not authorized. Bad token");

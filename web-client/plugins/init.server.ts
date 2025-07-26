@@ -5,8 +5,6 @@ export interface NuxtServerInitOptions {
 }
 
 export default defineNuxtPlugin(async (nuxtApp) => {
-  console.log("init.server.ts hit...");
-
   const isServer = !!nuxtApp.ssrContext;
 
   if (!isServer) {
