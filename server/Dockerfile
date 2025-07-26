@@ -16,8 +16,10 @@ RUN cargo build --release
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  libssl3 postgresql-client libpq5 ca-certificates \
+  bash libssl3 postgresql-client git open-ssh-client curl libpq5 ca-certificates \
   && rm -rf /var/lib/apt/lists/*
+
+RUN cargo install diesel_cli --no-default-features --features postgres
 
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app/target/release/server /usr/src/app/server
