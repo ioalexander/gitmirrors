@@ -1,7 +1,7 @@
 FROM rust:1.87-slim as builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  pkg-config libssl-dev libpq-dev ca-certificates curl git \
+  pkg-config libssl-dev libpq-dev ca-certificates postgresql-client curl git \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
@@ -16,7 +16,7 @@ RUN cargo build --release
 FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  libssl3 libpq5 ca-certificates \
+  libssl3 postgresql-client libpq5 ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app

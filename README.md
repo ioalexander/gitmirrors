@@ -20,8 +20,6 @@ docker-compose up --build
 
 ## Develop GitMirrors
 
-Use rust `toolchain: 1.86.0`
-
 ```
 git clone
 ```
@@ -45,8 +43,10 @@ Otherwise, the password will still be any.
 ## Roadmap
 
 - [x] basic functionality - repositories are being cloned
-- [ ] cleaning code base (e.g. linters, refactorings)
-- [ ] docker image building pipelines
+- [-] cleaning code base (e.g. linters, refactorings)
+  - [x] linters
+  - [ ] refactorings, de-dublications,
+- [x] docker image building pipelines
 - [ ] pull repositories data
 - [ ] advanced input validation
 - [ ] users management
