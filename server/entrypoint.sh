@@ -3,8 +3,6 @@ set -euo pipefail
 
 echo "entrypoint.sh started!"
 
-cd server/
-
 ls -la
 
 pwd
