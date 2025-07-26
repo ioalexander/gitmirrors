@@ -13,7 +13,7 @@ RUN cargo build --release && rm -r src
 COPY . .
 RUN cargo build --release
 
-FROM debian:bookworm-slim
+FROM rust:1.87-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   bash libssl3 postgresql-client git openssh-client curl libpq5 ca-certificates \
