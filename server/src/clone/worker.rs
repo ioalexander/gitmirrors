@@ -307,7 +307,7 @@ pub async fn insert_log(
     let log_message = log_message.to_owned();
     let pool = pool.clone();
 
-    let res = tokio::task::spawn_blocking(
+    tokio::task::spawn_blocking(
         move || -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             let mut conn = pool
                 .get()
@@ -330,5 +330,5 @@ pub async fn insert_log(
     .await
     .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
 
-    Ok(res)
+    Ok(())
 }

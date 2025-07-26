@@ -16,16 +16,10 @@ use diesel::sql_query;
 use diesel::sql_types::{BigInt, Date, Timestamptz, Uuid as SqlUuid};
 
 #[derive(QueryableByName)]
-struct CountResult {
-    #[sql_type = "BigInt"]
-    count: i64,
-}
-
-#[derive(QueryableByName)]
 struct DayCountResult {
-    #[sql_type = "Date"]
+    #[diesel(sql_type = Date)]
     day: NaiveDate,
-    #[sql_type = "BigInt"]
+    #[diesel(sql_type = BigInt)]
     count: i64,
 }
 
