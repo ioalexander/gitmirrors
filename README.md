@@ -2,6 +2,21 @@
 
 GitMirrors is a self-hosted repository archiving tool that automatically clones and mirrors Git repositories on a schedule. Written in Rust and Nuxt;
 
+![Spoiler](docs/images/banner.png)
+
+## Screenshots:
+
+<table>
+  <tr>
+    <td><img src="docs/images/screenshot_1.png" width="200"/></td>
+    <td><img src="docs/images/screenshot_2.png" width="200"/></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/screenshot_3.png" width="200"/></td>
+    <td><img src="docs/images/screenshot_4.png" width="200"/></td>
+  </tr>
+</table>
+
 ## Running GitMirrors
 
 ```
@@ -9,7 +24,7 @@ git clone
 ```
 
 ```sh
-cp .env.example .env
+cp .env.production .env
 ```
 
 Fill the `.env` file.
@@ -20,9 +35,7 @@ Your `GID` and `UID` should be filled
 docker-compose up --build
 ```
 
-<blockquote>
-  <strong>⚠️ Warning:</strong> Right now, your git credentials are being stored in plain text, use only trusted instances!
-</blockquote>
+> **⚠️ Warning:** Right now, your git credentials are being stored in plain text, use only trusted instances!
 
 ## Develop GitMirrors
 
@@ -43,8 +56,7 @@ docker-compose -f docker-compose.dev.yml up
 Username: `admin`
 Password: `any_random_string`
 
-**Warning!** You should change the password after that.
-Otherwise, the password will still be any.
+> **⚠️ Warning:** You should change the password after that. Otherwise, the password will still be any.
 
 ## Roadmap
 
