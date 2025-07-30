@@ -19,6 +19,7 @@ services:
       ROCKET_ENV: ${ROCKET_ENV}
       ROCKET_ADDRESS: ${ROCKET_ADDRESS}
       DATABASE_URL: ${DATABASE_URL}
+      CORS_URL: ${CORS_URL}
 
   web-client:
     user: "${UID}:${GID}"

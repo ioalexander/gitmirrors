@@ -14,6 +14,7 @@ services:
       ROCKET_ADDRESS: ${ROCKET_ADDRESS}
       ROCKET_ENV: ${ROCKET_ENV}
       DATABASE_URL: ${DATABASE_URL}
+      CORS_URL: ${CORS_URL}
 
   web-client:
     image: "ioalexander/gitmirrors-frontend:latest"
