@@ -31,6 +31,8 @@ async fn rocket() -> _ {
         .filter(|s| !s.is_empty())
         .collect();
 
+    println!("Allowed CORS origins: {:?}", cors_origins);
+
     let cors_allowed_origins = AllowedOrigins::some_exact(&cors_origins);
     let cors = CorsOptions {
         allowed_origins: cors_allowed_origins,
